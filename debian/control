@@ -4,6 +4,6 @@ Section: base
 Priority: optional
 Architecture: amd64
 Depends: nodejs, npm, avahi-daemon
-Maintainer: Your Name <your.email@example.com>
+Maintainer: Stanislav Grosman <stanislav.grosman@example.com>
 Description: Orbit Manager
  A simple server management panel.

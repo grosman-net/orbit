@@ -25,15 +25,19 @@ export function Dashboard() {
     processes: 0,
   })
 
-  useEffect(() => {
-    const loadStats = () => {
-      const savedStats = localStorage.getItem("orbit-server-stats")
-      if (savedStats) {
-        setStats(JSON.parse(savedStats))
-      }
+  // Fetch server stats from API
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/server-info")
+      const data = await response.json()
+      setStats(data)
+    } catch (error) {
+      console.error("Failed to fetch server stats:", error)
     }
+  }
 
-    loadStats()
+  useEffect(() => {
+    fetchStats()
 
     // Simulate real-time updates
     const interval = setInterval(() => {

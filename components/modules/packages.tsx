@@ -26,10 +26,18 @@ export function Packages() {
   }, [])
 
   const loadPackages = () => {
-    const savedPackages = localStorage.getItem("orbit-packages")
-    if (savedPackages) {
-      setPackages(JSON.parse(savedPackages))
+    // Fetch packages from API
+    const fetchPackages = async () => {
+      try {
+        const response = await fetch("/api/packages")
+        const data = await response.json()
+        setPackages(data.packages)
+      } catch (error) {
+        console.error("Failed to fetch packages:", error)
+      }
     }
+
+    fetchPackages()
   }
 
   const savePackages = (updatedPackages: PackageItem[]) => {

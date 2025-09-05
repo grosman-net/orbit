@@ -40,7 +40,8 @@ jobs:
       run: |
         mkdir -p debian/DEBIAN
         cp -r debian/control debian/DEBIAN/control
-        cp -r debian/orbitmgr.service debian/opt/orbitmgr/orbitmgr.service
+        mkdir -p debian/opt/orbitmgr
+        cp debian/orbitmgr.service debian/opt/orbitmgr/orbitmgr.service
         cp -r debian/postinst debian/DEBIAN/postinst
         chmod +x debian/DEBIAN/postinst
         dpkg-deb --build debian orbitmgr-1.0.0.deb

@@ -58,12 +58,7 @@ export function Network() {
   const [ufwRules, setUfwRules] = useState<UfwRule[]>([])
 
   useEffect(() => {
-    // Fetch initial data (mocked for now)
-    setInterfaces([
-      { name: "eth0", status: true },
-      { name: "wlan0", status: false },
-    ])
-
+    // Fetch initial data from API
     const fetchInterfaces = async () => {
       try {
         const response = await fetch("/api/network")

@@ -33,5 +33,5 @@ systemctl start orbitmgr
 /etc/systemd/system/orbitmgr.service
 
 %changelog
-* $(date +"%a %b %d %Y") Your Name <your.email@example.com> - 1.0.0-1
+* $(date +"%a %b %d %Y") Stanislav Grosman <stanislav.grosman@example.com> - 1.0.0-1
 - Initial RPM package

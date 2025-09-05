@@ -21,20 +21,19 @@ export function Users() {
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
-    loadUsers()
-  }, [])
-
-  const loadUsers = () => {
-    const savedUsers = localStorage.getItem("orbit-users")
-    if (savedUsers) {
-      setUsers(JSON.parse(savedUsers))
+    // Fetch users from API
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("/api/users")
+        const data = await response.json()
+        setUsers(data.users)
+      } catch (error) {
+        console.error("Failed to fetch users:", error)
+      }
     }
-  }
 
-  const saveUsers = (updatedUsers: User[]) => {
-    localStorage.setItem("orbit-users", JSON.stringify(updatedUsers))
-    setUsers(updatedUsers)
-  }
+    fetchUsers()
+  }, [])
 
   const toggleUserStatus = (id: number) => {
     const updatedUsers = users.map((user) =>
@@ -42,7 +41,7 @@ export function Users() {
         ? { ...user, status: user.status === "online" ? ("offline" as const) : ("online" as const) }
         : user,
     )
-    saveUsers(updatedUsers)
+    setUsers(updatedUsers)
   }
 
   const filteredUsers = users.filter(

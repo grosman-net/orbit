@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,71 +16,27 @@ interface LogEntry {
   message: string
 }
 
-const sampleLogs: LogEntry[] = [
-  {
-    id: 1,
-    timestamp: "2024-01-15 14:32:15",
-    level: "info",
-    service: "nginx",
-    message: "Server started successfully on port 80",
-  },
-  {
-    id: 2,
-    timestamp: "2024-01-15 14:31:45",
-    level: "warning",
-    service: "postgresql",
-    message: "Connection pool reaching maximum capacity",
-  },
-  {
-    id: 3,
-    timestamp: "2024-01-15 14:30:22",
-    level: "error",
-    service: "redis",
-    message: "Failed to connect to cluster node redis-02",
-  },
-  {
-    id: 4,
-    timestamp: "2024-01-15 14:29:18",
-    level: "info",
-    service: "docker",
-    message: "Container orbit-app-1 started successfully",
-  },
-  {
-    id: 5,
-    timestamp: "2024-01-15 14:28:55",
-    level: "info",
-    service: "systemd",
-    message: "Service orbit-monitor.service started",
-  },
-  {
-    id: 6,
-    timestamp: "2024-01-15 14:27:33",
-    level: "warning",
-    service: "nginx",
-    message: "Rate limiting activated for IP 192.168.1.100",
-  },
-  {
-    id: 7,
-    timestamp: "2024-01-15 14:26:12",
-    level: "error",
-    service: "nodejs",
-    message: "Unhandled promise rejection in application",
-  },
-  {
-    id: 8,
-    timestamp: "2024-01-15 14:25:44",
-    level: "info",
-    service: "postgresql",
-    message: "Database backup completed successfully",
-  },
-]
-
 export function Logs() {
-  const [logs, setLogs] = useState<LogEntry[]>(sampleLogs)
+  const [logs, setLogs] = useState<LogEntry[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [levelFilter, setLevelFilter] = useState<string>("all")
   const [serviceFilter, setServiceFilter] = useState<string>("all")
   const [loading, setLoading] = useState(false)
+
+  // Fetch logs from API
+  const fetchLogs = async () => {
+    try {
+      const response = await fetch("/api/logs")
+      const data = await response.json()
+      setLogs(data.logs)
+    } catch (error) {
+      console.error("Failed to fetch logs:", error)
+    }
+  }
+
+  useEffect(() => {
+    fetchLogs()
+  }, [])
 
   const refreshLogs = () => {
     setLoading(true)
