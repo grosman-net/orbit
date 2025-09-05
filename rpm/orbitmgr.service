@@ -1,0 +1,12 @@
+[Unit]
+Description=Orbit Management Panel
+After=network.target
+
+[Service]
+Type=simple
+User=orbitmgr
+ExecStart=/opt/orbit/start.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

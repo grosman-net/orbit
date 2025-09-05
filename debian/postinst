@@ -1,0 +1,13 @@
+#!/bin/bash
+# Post-installation script for Debian-based systems
+
+# Create orbit user
+useradd -r -m -s /bin/bash orbitmgr || echo "User already exists"
+
+# Set permissions
+chown -R orbitmgr:orbitmgr /opt/orbit
+chmod -R 750 /opt/orbit
+
+# Enable and start service
+systemctl enable orbitmgr.service
+systemctl start orbitmgr.service
