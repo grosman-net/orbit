@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { NetworkIcon, Wifi, Shield, Globe, Server, Lock } from "lucide-react"
-import { fetch } from "next/dist/compiled/@edge-runtime/primitives/fetch"
 
 interface NetworkConnection {
   id: number
