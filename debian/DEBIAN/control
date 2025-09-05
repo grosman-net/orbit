@@ -1,0 +1,8 @@
+Package: orbitmgr
+Version: 1.0.0
+Section: base
+Priority: optional
+Architecture: all
+Depends: systemd
+Maintainer: Orbit Team <support@orbit.local>
+Description: Orbit Management Panel for server monitoring and management.

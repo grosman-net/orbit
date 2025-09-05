@@ -25,3 +25,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ignore built packages
+*.deb
+
+# Ignore build directories
+.debbuild/

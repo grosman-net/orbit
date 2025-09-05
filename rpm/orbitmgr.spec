@@ -6,6 +6,8 @@ License: MIT
 
 Requires: systemd
 
+Source0: orbitmgr-1.0.0.tar.gz
+
 %description
 Orbit Management Panel for server monitoring and management.
 
@@ -16,7 +18,7 @@ Orbit Management Panel for server monitoring and management.
 
 %install
 mkdir -p %{buildroot}/opt/orbit
-cp -r * %{buildroot}/opt/orbit
+rsync -av --exclude=node_modules . %{buildroot}/opt/orbit
 
 %post
 # Post-installation script for RPM-based systems
@@ -27,7 +29,8 @@ systemctl enable orbitmgr.service
 systemctl start orbitmgr.service
 
 %files
-/opt/orbit
+%exclude /opt/orbit/node_modules
 
 %changelog
-* 5 сентября 2025 г. Orbit Management Panel initial release
+* Mon Sep 04 2023 Orbit Team <support@orbit.local> - 1.0.0-1
+- Initial release

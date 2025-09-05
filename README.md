@@ -83,6 +83,42 @@ docker run -d -p 8080:8080 orbit/orbit:latest
 3. Add your servers to the dashboard
 4. Start managing packages, services, and configurations visually
 
+## 📦 Packaging and Distribution
+
+Orbit supports packaging for `.deb` and `.rpm` formats. Follow the instructions below to install, upgrade, or remove the package.
+
+### Installing Packages
+
+#### Install `.deb` Package
+If you have downloaded the `.deb` package from the release:
+```bash
+sudo dpkg -i orbitmgr.deb
+```
+
+#### Install `.rpm` Package
+If you have downloaded the `.rpm` package from the release:
+```bash
+sudo rpm -i orbitmgr.rpm
+```
+
+#### Upgrade `.rpm` Package
+If you are upgrading from a previous version:
+```bash
+sudo rpm -U orbitmgr.rpm
+```
+
+#### Remove `.rpm` Package
+To uninstall the package:
+```bash
+sudo rpm -e orbitmgr
+```
+
+### Notes
+- Ensure all dependencies are installed before running the commands.
+- The `.deb` and `.rpm` packages will install the Orbit service and set it up to run automatically.
+
+---
+
 ## 🛠️ Development
 
 ### Building from Source
