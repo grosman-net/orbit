@@ -254,8 +254,6 @@ export function Network() {
           </div>
         </CardContent>
       </Card>
-<<<<<<< Updated upstream
-=======
 
       {/* Network Interfaces */}
       <Card className="gradient-card border-border/50">
@@ -283,7 +281,6 @@ export function Network() {
           <Button onClick={() => addUfwRule(0, "tcp", "allow")}>Add Rule</Button>
         </CardContent>
       </Card>
->>>>>>> Stashed changes
     </div>
   )
 }

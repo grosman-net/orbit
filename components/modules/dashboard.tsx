@@ -41,8 +41,6 @@ export function Dashboard() {
     processes: 0,
   })
 
-<<<<<<< Updated upstream
-=======
   // Fetch server stats from API
   const fetchStats = async () => {
     try {
@@ -57,7 +55,6 @@ export function Dashboard() {
     }
   }
 
->>>>>>> Stashed changes
   useEffect(() => {
     const loadStats = () => {
       const savedStats = localStorage.getItem("orbit-server-stats")

@@ -28,6 +28,8 @@ next-env.d.ts
 
 # Ignore built packages
 *.deb
+*.rpm
 
 # Ignore build directories
 .debbuild/
+.rpmbuild/
