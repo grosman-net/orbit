@@ -59,6 +59,7 @@
     "recharts": "latest",
     "sonner": "^1.7.4",
     "svelte": "latest",
+    "systeminformation": "^5.27.8",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",

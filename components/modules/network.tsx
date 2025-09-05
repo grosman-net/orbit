@@ -45,7 +45,7 @@ export function Network() {
   const [rules, setRules] = useState(firewallRules)
 
   const toggleRule = (id: number) => {
-    setRules((prev) => prev.map((rule) => (rule.id === id ? { ...rule, enabled: !rule.enabled } : rule)))
+    setRules((prev) => (prev ? prev.map((rule) => (rule.id === id ? { ...rule, enabled: !rule.enabled } : rule)) : []))
   }
 
   const getStatusColor = (status: string) => {
@@ -58,6 +58,35 @@ export function Network() {
     return action === "allow"
       ? "bg-[var(--mint)]/20 text-[var(--mint)] border-[var(--mint)]/30"
       : "bg-red-500/20 text-red-400 border-red-500/30"
+  }
+
+  const renderInterfaces = () => {
+    return interfaces && interfaces.length > 0 ? (
+      interfaces.map((iface) => (
+        <div key={iface.name}>
+          <span>{iface.name}</span>
+          <Switch
+            checked={iface.status}
+            onCheckedChange={(checked) => toggleInterface(iface.name, checked)}
+          />
+        </div>
+      ))
+    ) : (
+      <p>No interfaces available</p>
+    )
+  }
+
+  const renderUfwRules = () => {
+    return ufwRules && ufwRules.length > 0 ? (
+      ufwRules.map((rule) => (
+        <div key={rule.port}>
+          <span>{rule.protocol}:{rule.port}</span>
+          <span>{rule.action}</span>
+        </div>
+      ))
+    ) : (
+      <p>No UFW rules available</p>
+    )
   }
 
   return (
@@ -225,6 +254,36 @@ export function Network() {
           </div>
         </CardContent>
       </Card>
+<<<<<<< Updated upstream
+=======
+
+      {/* Network Interfaces */}
+      <Card className="gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <NetworkIcon className="h-5 w-5 text-[var(--mint)]" />
+            Network Interfaces
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {renderInterfaces()}
+        </CardContent>
+      </Card>
+
+      {/* UFW Rules */}
+      <Card className="gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-[var(--mint)]" />
+            UFW Rules
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {renderUfwRules()}
+          <Button onClick={() => addUfwRule(0, "tcp", "allow")}>Add Rule</Button>
+        </CardContent>
+      </Card>
+>>>>>>> Stashed changes
     </div>
   )
 }

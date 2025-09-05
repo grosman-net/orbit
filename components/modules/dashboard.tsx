@@ -6,11 +6,27 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Cpu, MemoryStick, HardDrive, Network, Clock, Activity, Server, Zap } from "lucide-react"
 
+interface MemoryStats {
+  total: number
+  used: number
+  usage: number
+}
+
+interface NetworkStats {
+  rx: number // Received bytes
+  tx: number // Transmitted bytes
+  rx_sec: number // Received bytes per second
+  tx_sec: number // Transmitted bytes per second
+}
+
 interface ServerStats {
   cpu: number
-  memory: number
-  disk: number
-  network: number
+  memory: MemoryStats
+  disk: {
+    total: number
+    used: number
+  }
+  network: NetworkStats
   uptime: number
   processes: number
 }
@@ -18,13 +34,30 @@ interface ServerStats {
 export function Dashboard() {
   const [stats, setStats] = useState<ServerStats>({
     cpu: 0,
-    memory: 0,
-    disk: 0,
-    network: 0,
+    memory: { total: 0, used: 0, usage: 0 },
+    disk: { total: 0, used: 0 },
+    network: { rx: 0, tx: 0, rx_sec: 0, tx_sec: 0 },
     uptime: 0,
     processes: 0,
   })
 
+<<<<<<< Updated upstream
+=======
+  // Fetch server stats from API
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/server-info")
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setStats(data)
+    } catch (error) {
+      console.error("Failed to fetch server stats:", error)
+    }
+  }
+
+>>>>>>> Stashed changes
   useEffect(() => {
     const loadStats = () => {
       const savedStats = localStorage.getItem("orbit-server-stats")
@@ -40,8 +73,15 @@ export function Dashboard() {
       setStats((prev) => ({
         ...prev,
         cpu: Math.max(10, Math.min(90, prev.cpu + (Math.random() - 0.5) * 10)),
-        memory: Math.max(20, Math.min(95, prev.memory + (Math.random() - 0.5) * 5)),
-        network: Math.max(0, Math.min(100, prev.network + (Math.random() - 0.5) * 20)),
+        memory: {
+          ...prev.memory,
+          used: Math.max(0, Math.min(prev.memory.total, prev.memory.used + (Math.random() - 0.5) * 5)),
+        },
+        network: {
+          ...prev.network,
+          rx: Math.max(0, Math.min(1000, prev.network.rx + (Math.random() - 0.5) * 100)),
+          tx: Math.max(0, Math.min(1000, prev.network.tx + (Math.random() - 0.5) * 100)),
+        },
         uptime: prev.uptime + 1,
       }))
     }, 3000)
@@ -88,8 +128,8 @@ export function Dashboard() {
             <Cpu className={`h-4 w-4 ${getStatusColor(stats.cpu, "cpu")}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.cpu.toFixed(1)}%</div>
-            <Progress value={stats.cpu} className="h-2" />
+            <div className="text-2xl font-bold mb-2">{typeof stats.cpu === "number" ? stats.cpu.toFixed(1) : "0.0"}%</div>
+            <Progress value={stats.cpu || 0} className="h-2" />
             <p className="text-xs text-muted-foreground mt-2">
               {stats.cpu > 80 ? "High load" : stats.cpu > 60 ? "Moderate load" : "Normal"}
             </p>
@@ -99,24 +139,30 @@ export function Dashboard() {
         <Card className="gradient-card border-border/50 hover:border-[var(--mint)]/30 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
-            <MemoryStick className={`h-4 w-4 ${getStatusColor(stats.memory, "memory")}`} />
+            <MemoryStick className={`h-4 w-4 ${getStatusColor(stats.memory.usage, "memory")}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.memory.toFixed(1)}%</div>
-            <Progress value={stats.memory} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">{((stats.memory * 16) / 100).toFixed(1)} GB / 16 GB</p>
+            <div className="text-2xl font-bold mb-2">
+              {typeof stats.memory === "object" && stats.memory.used && stats.memory.total
+                ? `${(stats.memory.used / (1024 ** 3)).toFixed(1)} GB / ${(stats.memory.total / (1024 ** 3)).toFixed(1)} GB`
+                : "0.0 GB / 0.0 GB"}
+            </div>
+            <Progress value={stats.memory.usage || 0} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {stats.memory ? ((stats.memory.usage * 16) / 100).toFixed(1) : "0.0"} GB / 16 GB
+            </p>
           </CardContent>
         </Card>
 
         <Card className="gradient-card border-border/50 hover:border-[var(--mint)]/30 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Disk Usage</CardTitle>
-            <HardDrive className={`h-4 w-4 ${getStatusColor(stats.disk, "disk")}`} />
+            <HardDrive className={`h-4 w-4 ${getStatusColor(stats.disk.used / stats.disk.total * 100, "disk")}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.disk}%</div>
-            <Progress value={stats.disk} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">{((stats.disk * 500) / 100).toFixed(0)} GB / 500 GB</p>
+            <div className="text-2xl font-bold mb-2">{(stats.disk.used / stats.disk.total * 100).toFixed(0)}%</div>
+            <Progress value={stats.disk.used / stats.disk.total * 100} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-2">{`${(stats.disk.used / (1024 ** 3)).toFixed(1)} GB / ${(stats.disk.total / (1024 ** 3)).toFixed(1)} GB`}</p>
           </CardContent>
         </Card>
 
@@ -126,9 +172,9 @@ export function Dashboard() {
             <Network className="h-4 w-4 text-[var(--mint)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.network.toFixed(1)} MB/s</div>
-            <Progress value={Math.min(100, stats.network * 2)} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">Combined up/down</p>
+            <div className="text-2xl font-bold mb-2">{stats.network.rx_sec.toFixed(1)} MB/s</div>
+            <Progress value={Math.min(100, stats.network.rx_sec * 2)} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-2">Received</p>
           </CardContent>
         </Card>
       </div>
