@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { NetworkIcon, Wifi, Shield, Globe, Server, Lock } from "lucide-react"
+import { fetch } from "next/dist/compiled/@edge-runtime/primitives/fetch"
 
 interface NetworkConnection {
   id: number
@@ -23,6 +24,17 @@ interface FirewallRule {
   protocol: string
   action: "allow" | "deny"
   enabled: boolean
+}
+
+interface NetworkInterface {
+  name: string
+  status: boolean
+}
+
+interface UfwRule {
+  port: number
+  protocol: string
+  action: "allow" | "deny"
 }
 
 const connections: NetworkConnection[] = [
@@ -43,9 +55,87 @@ const firewallRules: FirewallRule[] = [
 
 export function Network() {
   const [rules, setRules] = useState(firewallRules)
+  const [interfaces, setInterfaces] = useState<NetworkInterface[]>([])
+  const [ufwRules, setUfwRules] = useState<UfwRule[]>([])
+
+  useEffect(() => {
+    // Fetch initial data (mocked for now)
+    setInterfaces([
+      { name: "eth0", status: true },
+      { name: "wlan0", status: false },
+    ])
+
+    const fetchInterfaces = async () => {
+      try {
+        const response = await fetch("/api/network")
+        const data = await response.json()
+        setInterfaces(data.interfaces)
+      } catch (error) {
+        console.error("Failed to fetch network interfaces:", error)
+      }
+    }
+
+    fetchInterfaces()
+  }, [])
+
+  useEffect(() => {
+    const fetchUfwRules = async () => {
+      try {
+        const response = await fetch("/api/ufw")
+        const data = await response.json()
+        setUfwRules(data.rules)
+      } catch (error) {
+        console.error("Failed to fetch UFW rules:", error)
+      }
+    }
+
+    fetchUfwRules()
+  }, [])
 
   const toggleRule = (id: number) => {
     setRules((prev) => prev.map((rule) => (rule.id === id ? { ...rule, enabled: !rule.enabled } : rule)))
+  }
+
+  const toggleInterface = async (name: string, status: boolean) => {
+    try {
+      const action = status ? "enable" : "disable"
+      await fetch("/api/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, action }),
+      })
+      setInterfaces((prev) =>
+        prev.map((iface) => (iface.name === name ? { ...iface, status: !iface.status } : iface))
+      )
+    } catch (error) {
+      console.error("Failed to toggle interface:", error)
+    }
+  }
+
+  const addUfwRule = async (port: number, protocol: string, action: string) => {
+    try {
+      await fetch("/api/ufw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ port, protocol, action }),
+      })
+      setUfwRules((prev) => [...prev, { port, protocol, action: action as "allow" | "deny" }])
+    } catch (error) {
+      console.error("Failed to add UFW rule:", error)
+    }
+  }
+
+  const removeUfwRule = async (ruleNumber: number) => {
+    try {
+      await fetch("/api/ufw", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ruleNumber }),
+      })
+      setUfwRules((prev) => prev.filter((_, index) => index !== ruleNumber - 1))
+    } catch (error) {
+      console.error("Failed to remove UFW rule:", error)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -223,6 +313,47 @@ export function Network() {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Network Interfaces */}
+      <Card className="gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <NetworkIcon className="h-5 w-5 text-[var(--mint)]" />
+            Network Interfaces
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {interfaces.map((iface) => (
+            <div key={iface.name} className="flex items-center justify-between mb-4">
+              <span>{iface.name}</span>
+              <Switch checked={iface.status} onCheckedChange={() => toggleInterface(iface.name, iface.status)} />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* UFW Rules */}
+      <Card className="gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-[var(--mint)]" />
+            UFW Rules
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {ufwRules.map((rule, index) => (
+            <div key={index} className="flex items-center justify-between mb-4">
+              <span>
+                {rule.action.toUpperCase()} {rule.protocol.toUpperCase()} {rule.port}
+              </span>
+              <Button variant="destructive" onClick={() => removeUfwRule(index)}>
+                Remove
+              </Button>
+            </div>
+          ))}
+          <Button onClick={() => addUfwRule(0, "tcp", "allow")}>Add Rule</Button>
         </CardContent>
       </Card>
     </div>
