@@ -1,0 +1,34 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Build project
+      run: pnpm build
+
+    - name: Create installable package
+      run: pnpm pack
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: orbit-package
+        path: "*.tgz"
