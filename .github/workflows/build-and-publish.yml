@@ -35,3 +35,30 @@ jobs:
       with:
         name: orbit-package
         path: "*.tgz"
+
+    - name: Build Debian package
+      run: |
+        mkdir -p debian/DEBIAN
+        cp -r debian/control debian/DEBIAN/control
+        cp -r debian/orbitmgr.service debian/opt/orbitmgr/orbitmgr.service
+        cp -r debian/postinst debian/DEBIAN/postinst
+        chmod +x debian/DEBIAN/postinst
+        dpkg-deb --build debian orbitmgr-1.0.0.deb
+
+    - name: Upload Debian package
+      uses: actions/upload-artifact@v4
+      with:
+        name: orbitmgr-debian-package
+        path: orbitmgr-1.0.0.deb
+
+    - name: Build RPM package
+      run: |
+        mkdir -p rpm/BUILD rpm/RPMS rpm/SOURCES rpm/SPECS rpm/SRPMS
+        cp -r rpm/orbitmgr.spec rpm/SPECS/orbitmgr.spec
+        rpmbuild --define "_topdir $(pwd)/rpm" -bb rpm/SPECS/orbitmgr.spec
+
+    - name: Upload RPM package
+      uses: actions/upload-artifact@v4
+      with:
+        name: orbitmgr-rpm-package
+        path: rpm/RPMS/**/*.rpm

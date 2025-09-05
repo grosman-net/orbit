@@ -1,0 +1,14 @@
+[Unit]
+Description=Orbit Manager Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /opt/orbitmgr/server.js
+Restart=always
+User=nobody
+Group=nogroup
+Environment=PORT=3000
+WorkingDirectory=/opt/orbitmgr
+
+[Install]
+WantedBy=multi-user.target

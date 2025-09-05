@@ -1,0 +1,9 @@
+Package: orbitmgr
+Version: 1.0.0
+Section: base
+Priority: optional
+Architecture: amd64
+Depends: nodejs, npm, avahi-daemon
+Maintainer: Your Name <your.email@example.com>
+Description: Orbit Manager
+ A simple server management panel.

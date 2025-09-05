@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Install dependencies
+apt-get update
+apt-get install -y nodejs npm avahi-daemon
+
+# Copy files to /opt/orbitmgr
+mkdir -p /opt/orbitmgr
+cp -r . /opt/orbitmgr
+
+# Install Node.js dependencies
+cd /opt/orbitmgr
+npm install --production
+
+# Enable and start the service
+cp /opt/orbitmgr/debian/orbitmgr.service /etc/systemd/system/orbitmgr.service
+systemctl enable orbitmgr
+systemctl start orbitmgr
+
+# Output the service URL
+IP=$(hostname -I | awk '{print $1}')
+echo "Orbit Manager is running at http://$IP:3000 or http://orbit.local"
