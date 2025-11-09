@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import { OrbitSessionProvider } from "@/components/session-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        <Suspense fallback={null}>{children}</Suspense>
+        <OrbitSessionProvider>
+          <Suspense fallback={null}>{children}</Suspense>
+        </OrbitSessionProvider>
         <Analytics />
       </body>
     </html>

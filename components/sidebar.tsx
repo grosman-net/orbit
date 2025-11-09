@@ -10,10 +10,13 @@ import {
   Users,
   Network,
   Settings,
+  Server,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react"
-import type { ModuleType } from "@/app/page"
+import { signOut } from "next-auth/react"
+import type { ModuleType } from "@/components/orbit-app"
 
 interface SidebarProps {
   activeModule: ModuleType
@@ -27,6 +30,7 @@ const modules = [
   { id: "monitoring" as ModuleType, name: "Monitoring", icon: Activity },
   { id: "packages" as ModuleType, name: "Packages", icon: Package },
   { id: "logs" as ModuleType, name: "Logs", icon: FileText },
+  { id: "services" as ModuleType, name: "Services", icon: Server },
   { id: "users" as ModuleType, name: "Users", icon: Users },
   { id: "network" as ModuleType, name: "Network", icon: Network },
   { id: "settings" as ModuleType, name: "Settings", icon: Settings },
@@ -97,14 +101,23 @@ export function Sidebar({ activeModule, onModuleChange, collapsed, onToggleColla
         </nav>
 
         {/* Footer */}
-        {!collapsed && (
-          <div className="absolute bottom-4 left-4 right-4">
-            <div className="text-xs text-sidebar-foreground/40 text-center">
+        <div className="absolute bottom-4 left-4 right-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`w-full border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent ${collapsed ? "px-0" : ""}`}
+            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+          >
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span className="ml-2">Выйти</span>}
+          </Button>
+          {!collapsed && (
+            <div className="mt-3 text-xs text-sidebar-foreground/40 text-center">
               <p>Orbit v1.0.0</p>
               <p>System Administrator Panel</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </TooltipProvider>
   )

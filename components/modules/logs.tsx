@@ -1,193 +1,176 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useEffect, useMemo, useState } from "react"
+import { AlertCircle, AlertTriangle, Download, FileText, Info, RefreshCw, Search } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Search, Download, RefreshCw, AlertCircle, Info, AlertTriangle } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface LogEntry {
-  id: number
+  id: string
   timestamp: string
-  level: "info" | "warning" | "error"
-  service: string
+  priority?: number
+  unit?: string
   message: string
 }
 
-const sampleLogs: LogEntry[] = [
-  {
-    id: 1,
-    timestamp: "2024-01-15 14:32:15",
-    level: "info",
-    service: "nginx",
-    message: "Server started successfully on port 80",
-  },
-  {
-    id: 2,
-    timestamp: "2024-01-15 14:31:45",
-    level: "warning",
-    service: "postgresql",
-    message: "Connection pool reaching maximum capacity",
-  },
-  {
-    id: 3,
-    timestamp: "2024-01-15 14:30:22",
-    level: "error",
-    service: "redis",
-    message: "Failed to connect to cluster node redis-02",
-  },
-  {
-    id: 4,
-    timestamp: "2024-01-15 14:29:18",
-    level: "info",
-    service: "docker",
-    message: "Container orbit-app-1 started successfully",
-  },
-  {
-    id: 5,
-    timestamp: "2024-01-15 14:28:55",
-    level: "info",
-    service: "systemd",
-    message: "Service orbit-monitor.service started",
-  },
-  {
-    id: 6,
-    timestamp: "2024-01-15 14:27:33",
-    level: "warning",
-    service: "nginx",
-    message: "Rate limiting activated for IP 192.168.1.100",
-  },
-  {
-    id: 7,
-    timestamp: "2024-01-15 14:26:12",
-    level: "error",
-    service: "nodejs",
-    message: "Unhandled promise rejection in application",
-  },
-  {
-    id: 8,
-    timestamp: "2024-01-15 14:25:44",
-    level: "info",
-    service: "postgresql",
-    message: "Database backup completed successfully",
-  },
-]
+const PRIORITY_LABELS: Record<number, string> = {
+  0: "EMERG",
+  1: "ALERT",
+  2: "CRIT",
+  3: "ERROR",
+  4: "WARN",
+  5: "NOTICE",
+  6: "INFO",
+  7: "DEBUG",
+}
+
+const PRIORITY_OPTIONS = [
+  { value: "all", label: "All Levels" },
+  { value: "err", label: "Errors" },
+  { value: "warning", label: "Warnings" },
+  { value: "info", label: "Info" },
+] as const
 
 export function Logs() {
-  const [logs, setLogs] = useState<LogEntry[]>(sampleLogs)
+  const [entries, setEntries] = useState<LogEntry[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [levelFilter, setLevelFilter] = useState<string>("all")
-  const [serviceFilter, setServiceFilter] = useState<string>("all")
+  const [priority, setPriority] = useState<(typeof PRIORITY_OPTIONS)[number]["value"]>("all")
+  const [unit, setUnit] = useState("all")
   const [loading, setLoading] = useState(false)
 
-  const refreshLogs = () => {
-    setLoading(true)
-    setTimeout(() => {
-      // Simulate new log entries
-      const newLogs: LogEntry[] = [
-        {
-          id: Date.now(),
-          timestamp: new Date().toLocaleString("sv-SE").replace("T", " ").slice(0, 19),
-          level: ["info", "warning", "error"][Math.floor(Math.random() * 3)] as "info" | "warning" | "error",
-          service: ["nginx", "postgresql", "redis", "docker", "nodejs"][Math.floor(Math.random() * 5)],
-          message: "New system event detected",
-        },
-        ...logs,
-      ]
-      setLogs(newLogs.slice(0, 50)) // Keep only latest 50 logs
-      setLoading(false)
-    }, 1000)
-  }
+  const { toast } = useToast()
 
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.service.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesLevel = levelFilter === "all" || log.level === levelFilter
-    const matchesService = serviceFilter === "all" || log.service === serviceFilter
+  useEffect(() => {
+    void fetchLogs()
+    const interval = setInterval(() => {
+      void fetchLogs(true)
+    }, 5000)
 
-    return matchesSearch && matchesLevel && matchesService
-  })
+    return () => clearInterval(interval)
+  }, [priority, unit])
 
-  const getLogIcon = (level: string) => {
-    switch (level) {
-      case "error":
-        return <AlertCircle className="h-4 w-4 text-red-400" />
-      case "warning":
-        return <AlertTriangle className="h-4 w-4 text-yellow-400" />
-      default:
-        return <Info className="h-4 w-4 text-[var(--mint)]" />
+  const fetchLogs = async (silent = false) => {
+    if (!silent) setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.set("lines", "200")
+      if (priority !== "all") {
+        params.set("priority", priority)
+      }
+      if (unit !== "all") {
+        params.set("unit", unit)
+      }
+
+      const response = await fetch(`/api/logs?${params.toString()}`, { cache: "no-store" })
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      const data = (await response.json()) as { entries: LogEntry[] }
+      setEntries(data.entries ?? [])
+    } catch (error) {
+      if (!silent) {
+        toast({
+          title: "Failed to load logs",
+          description: error instanceof Error ? error.message : "Unable to fetch journal entries",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      if (!silent) setLoading(false)
     }
   }
 
-  const getLevelBadge = (level: string) => {
-    const colors = {
-      error: "bg-red-500/20 text-red-400 border-red-500/30",
-      warning: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-      info: "bg-[var(--mint)]/20 text-[var(--mint)] border-[var(--mint)]/30",
-    }
-    return colors[level as keyof typeof colors] || colors.info
+  const filteredEntries = useMemo(() => {
+    const term = searchTerm.toLowerCase()
+    return entries.filter((entry) => {
+      const matchesSearch =
+        entry.message.toLowerCase().includes(term) ||
+        (entry.unit?.toLowerCase().includes(term) ?? false) ||
+        formatPriorityLabel(entry.priority).toLowerCase().includes(term)
+      return matchesSearch
+    })
+  }, [entries, searchTerm])
+
+  const units = useMemo(() => {
+    const unique = new Set(entries.map((entry) => entry.unit).filter(Boolean) as string[])
+    return Array.from(unique).sort()
+  }, [entries])
+
+  const downloadLogs = () => {
+    const content = filteredEntries
+      .map((entry) => `[${formatTimestamp(entry.timestamp)}] ${entry.unit ?? "system"}: ${entry.message}`)
+      .join("\n")
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = `orbit-logs-${new Date().toISOString()}.txt`
+    anchor.click()
+    URL.revokeObjectURL(url)
   }
 
-  const services = [...new Set(logs.map((log) => log.service))]
+  const errorCount = entries.filter((entry) => (entry.priority ?? 7) <= 3).length
+  const warningCount = entries.filter((entry) => (entry.priority ?? 7) === 4).length
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-balance">System Logs</h1>
-          <p className="text-muted-foreground">Monitor system events and troubleshoot issues</p>
+          <p className="text-muted-foreground">Monitor systemd journal entries from your Ubuntu host</p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={refreshLogs}
+            onClick={() => fetchLogs()}
             disabled={loading}
             className="border-[var(--mint)]/30 hover:bg-[var(--mint)]/10 bg-transparent"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button variant="outline" className="border-border/50 hover:bg-accent/50 bg-transparent">
+          <Button variant="outline" className="border-border/50 hover:bg-accent/50 bg-transparent" onClick={downloadLogs}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* Filters */}
       <Card className="gradient-card border-border/50">
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search logs..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(event) => setSearchTerm(event.target.value)}
                 className="pl-10 bg-background/50 border-border/50"
               />
             </div>
-            <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger className="w-full md:w-40 bg-background/50 border-border/50">
-                <SelectValue placeholder="Log Level" />
+            <Select value={priority} onValueChange={(value) => setPriority(value as (typeof PRIORITY_OPTIONS)[number]["value"])}>
+              <SelectTrigger className="w-full md:w-48 bg-background/50 border-border/50">
+                <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="info">Info</SelectItem>
-                <SelectItem value="warning">Warning</SelectItem>
-                <SelectItem value="error">Error</SelectItem>
+                {PRIORITY_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Select value={serviceFilter} onValueChange={setServiceFilter}>
-              <SelectTrigger className="w-full md:w-40 bg-background/50 border-border/50">
-                <SelectValue placeholder="Service" />
+            <Select value={unit} onValueChange={setUnit}>
+              <SelectTrigger className="w-full md:w-48 bg-background/50 border-border/50">
+                <SelectValue placeholder="Unit" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Services</SelectItem>
-                {services.map((service) => (
+                <SelectItem value="all">All Units</SelectItem>
+                {units.map((service) => (
                   <SelectItem key={service} value={service}>
                     {service}
                   </SelectItem>
@@ -196,22 +179,21 @@ export function Logs() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
-            <span>Total: {logs.length}</span>
-            <span>Filtered: {filteredLogs.length}</span>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <span>Total: {entries.length}</span>
+            <span>Filtered: {filteredEntries.length}</span>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-              <span>Errors: {logs.filter((l) => l.level === "error").length}</span>
+              <div className="w-2 h-2 bg-red-400 rounded-full" />
+              <span>Errors: {errorCount}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-              <span>Warnings: {logs.filter((l) => l.level === "warning").length}</span>
+              <div className="w-2 h-2 bg-yellow-400 rounded-full" />
+              <span>Warnings: {warningCount}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Log Entries */}
       <Card className="gradient-card border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -220,37 +202,39 @@ export function Logs() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {filteredLogs.map((log) => (
+          <div className="space-y-2 max-h-[32rem] overflow-y-auto pr-1">
+            {filteredEntries.map((entry) => (
               <div
-                key={log.id}
+                key={entry.id}
                 className="flex items-start gap-3 p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors border border-border/30"
               >
-                <div className="mt-0.5">{getLogIcon(log.level)}</div>
+                <div className="mt-0.5">{renderLogIcon(entry.priority)}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm text-muted-foreground font-mono">{log.timestamp}</span>
-                    <Badge variant="outline" className={getLevelBadge(log.level)}>
-                      {log.level.toUpperCase()}
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-sm text-muted-foreground font-mono">{formatTimestamp(entry.timestamp)}</span>
+                    <Badge variant="outline" className={priorityBadgeClass(entry.priority)}>
+                      {formatPriorityLabel(entry.priority)}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {log.service}
-                    </Badge>
+                    {entry.unit && (
+                      <Badge variant="outline" className="text-xs">
+                        {entry.unit}
+                      </Badge>
+                    )}
                   </div>
-                  <p className="text-sm text-foreground break-words">{log.message}</p>
+                  <p className="text-sm text-foreground break-words whitespace-pre-line">{entry.message}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          {filteredLogs.length === 0 && (
+          {filteredEntries.length === 0 && (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No logs found</h3>
               <p className="text-muted-foreground">
-                {searchTerm || levelFilter !== "all" || serviceFilter !== "all"
+                {searchTerm || priority !== "all" || unit !== "all"
                   ? "Try adjusting your filters"
-                  : "No log entries available"}
+                  : "No log entries available."}
               </p>
             </div>
           )}
@@ -258,4 +242,38 @@ export function Logs() {
       </Card>
     </div>
   )
+}
+
+function formatPriorityLabel(priority?: number): string {
+  if (priority === undefined) return "INFO"
+  return PRIORITY_LABELS[priority] ?? "INFO"
+}
+
+function renderLogIcon(priority?: number) {
+  if (priority !== undefined && priority <= 3) {
+    return <AlertCircle className="h-4 w-4 text-red-400" />
+  }
+  if (priority === 4) {
+    return <AlertTriangle className="h-4 w-4 text-yellow-400" />
+  }
+  return <Info className="h-4 w-4 text-[var(--mint)]" />
+}
+
+function priorityBadgeClass(priority?: number): string {
+  if (priority !== undefined && priority <= 3) {
+    return "bg-red-500/20 text-red-400 border-red-500/30"
+  }
+  if (priority === 4) {
+    return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+  }
+  return "bg-[var(--mint)]/20 text-[var(--mint)] border-[var(--mint)]/30"
+}
+
+function formatTimestamp(timestamp: string): string {
+  try {
+    const date = new Date(timestamp)
+    return date.toLocaleString()
+  } catch {
+    return timestamp
+  }
 }

@@ -1,180 +1,278 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { NetworkIcon, Wifi, Shield, Globe, Server, Lock } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Globe, Lock, Network as NetworkIcon, Plus, RefreshCcw, Shield, Wifi } from "lucide-react"
 
-interface NetworkConnection {
-  id: number
-  ip: string
-  port: number
-  protocol: string
-  status: "active" | "blocked"
-  location: string
-}
-
-interface FirewallRule {
-  id: number
+interface NetworkInterface {
   name: string
-  port: string
-  protocol: string
-  action: "allow" | "deny"
-  enabled: boolean
+  macAddress?: string
+  ipv4: string[]
+  ipv6: string[]
+  up: boolean
 }
 
-const connections: NetworkConnection[] = [
-  { id: 1, ip: "192.168.1.100", port: 22, protocol: "SSH", status: "active", location: "Internal" },
-  { id: 2, ip: "203.0.113.45", port: 80, protocol: "HTTP", status: "active", location: "External" },
-  { id: 3, ip: "198.51.100.23", port: 443, protocol: "HTTPS", status: "active", location: "External" },
-  { id: 4, ip: "10.0.0.50", port: 5432, protocol: "PostgreSQL", status: "active", location: "Internal" },
-  { id: 5, ip: "172.16.0.10", port: 6379, protocol: "Redis", status: "blocked", location: "Internal" },
-]
+interface FirewallStatus {
+  enabled: boolean
+  rawStatus: string
+  rules: string[]
+}
 
-const firewallRules: FirewallRule[] = [
-  { id: 1, name: "SSH Access", port: "22", protocol: "TCP", action: "allow", enabled: true },
-  { id: 2, name: "HTTP Traffic", port: "80", protocol: "TCP", action: "allow", enabled: true },
-  { id: 3, name: "HTTPS Traffic", port: "443", protocol: "TCP", action: "allow", enabled: true },
-  { id: 4, name: "Database Access", port: "5432", protocol: "TCP", action: "allow", enabled: true },
-  { id: 5, name: "Block Suspicious", port: "1337", protocol: "TCP", action: "deny", enabled: true },
-]
+interface NetworkOverview {
+  hostname: string
+  defaultGateway?: string
+  forwardingEnabled: boolean
+  interfaces: NetworkInterface[]
+  firewall: FirewallStatus
+}
 
 export function Network() {
-  const [rules, setRules] = useState(firewallRules)
+  const [overview, setOverview] = useState<NetworkOverview | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [ruleInput, setRuleInput] = useState("")
+  const [denyInput, setDenyInput] = useState("")
+  const [firewallBusy, setFirewallBusy] = useState(false)
 
-  const toggleRule = (id: number) => {
-    setRules((prev) => prev.map((rule) => (rule.id === id ? { ...rule, enabled: !rule.enabled } : rule)))
+  const { toast } = useToast()
+
+  useEffect(() => {
+    void refreshOverview()
+  }, [])
+
+  const refreshOverview = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/network", { cache: "no-store" })
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      const data = (await response.json()) as NetworkOverview
+      setOverview(data)
+    } catch (error) {
+      toast({
+        title: "Failed to load network info",
+        description: error instanceof Error ? error.message : "Unable to fetch network overview",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const getStatusColor = (status: string) => {
-    return status === "active"
-      ? "bg-[var(--mint)]/20 text-[var(--mint)] border-[var(--mint)]/30"
-      : "bg-red-500/20 text-red-400 border-red-500/30"
+  const setFirewallState = async (enable: boolean) => {
+    setFirewallBusy(true)
+    try {
+      const response = await fetch("/api/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "firewall", state: enable ? "enable" : "disable" }),
+      })
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      toast({
+        title: `Firewall ${enable ? "enabled" : "disabled"}`,
+        description: `UFW has been ${enable ? "activated" : "stopped"}.`,
+      })
+      await refreshOverview()
+    } catch (error) {
+      toast({
+        title: "Firewall update failed",
+        description: error instanceof Error ? error.message : "Unable to update firewall state",
+        variant: "destructive",
+      })
+    } finally {
+      setFirewallBusy(false)
+    }
   }
 
-  const getActionColor = (action: string) => {
-    return action === "allow"
-      ? "bg-[var(--mint)]/20 text-[var(--mint)] border-[var(--mint)]/30"
-      : "bg-red-500/20 text-red-400 border-red-500/30"
+  const submitFirewallRule = async (type: "allow" | "deny", value: string) => {
+    if (value.trim().length === 0) {
+      toast({
+        title: "Rule cannot be empty",
+        description: "Provide a service name (e.g. ssh) or port (e.g. 443/tcp).",
+        variant: "destructive",
+      })
+      return
+    }
+    setFirewallBusy(true)
+    try {
+      const response = await fetch("/api/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: type === "allow" ? "allow-rule" : "deny-rule", rule: value.trim() }),
+      })
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      toast({
+        title: `Rule ${type === "allow" ? "added" : "blocked"}`,
+        description: `${type === "allow" ? "Allowed" : "Denied"} traffic for ${value.trim()}`,
+      })
+      setRuleInput("")
+      setDenyInput("")
+      await refreshOverview()
+    } catch (error) {
+      toast({
+        title: "Failed to update firewall",
+        description: error instanceof Error ? error.message : "Unable to apply firewall rule",
+        variant: "destructive",
+      })
+    } finally {
+      setFirewallBusy(false)
+    }
   }
+
+  const reloadFirewall = async () => {
+    setFirewallBusy(true)
+    try {
+      const response = await fetch("/api/network", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reload-firewall" }),
+      })
+      if (!response.ok) {
+        throw new Error(await response.text())
+      }
+      toast({
+        title: "Firewall reloaded",
+        description: "UFW rules have been reloaded successfully.",
+      })
+      await refreshOverview()
+    } catch (error) {
+      toast({
+        title: "Reload failed",
+        description: error instanceof Error ? error.message : "Unable to reload firewall",
+        variant: "destructive",
+      })
+    } finally {
+      setFirewallBusy(false)
+    }
+  }
+
+  const interfaces = useMemo(() => overview?.interfaces ?? [], [overview])
+  const firewallRules = overview?.firewall.rules ?? []
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-balance">Network Management</h1>
-        <p className="text-muted-foreground">Monitor connections and manage firewall rules</p>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold text-balance">Network & Firewall</h1>
+        <p className="text-muted-foreground">
+          Inspect interface status, forwarding, and manage the Ubuntu UFW firewall.
+        </p>
       </div>
 
-      {/* Network Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="gradient-card border-border/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Connections</CardTitle>
+            <CardTitle className="text-sm font-medium">Firewall</CardTitle>
+            <Shield className={`h-4 w-4 ${overview?.firewall.enabled ? "text-[var(--mint)]" : "text-yellow-400"}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold">
+                  {overview?.firewall.enabled ? "Enabled" : "Disabled"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {overview?.firewall.enabled ? "Firewall is enforcing rules" : "All firewall rules are inactive"}
+                </p>
+              </div>
+              <Switch
+                checked={overview?.firewall.enabled ?? false}
+                onCheckedChange={(checked) => void setFirewallState(checked)}
+                disabled={firewallBusy}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-card border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Default Gateway</CardTitle>
+            <Globe className="h-4 w-4 text-[var(--mint)]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {overview?.defaultGateway ?? "Not set"}
+            </div>
+            <p className="text-xs text-muted-foreground">Traffic exits through this gateway</p>
+          </CardContent>
+        </Card>
+
+        <Card className="gradient-card border-border/50">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">IP Forwarding</CardTitle>
             <NetworkIcon className="h-4 w-4 text-[var(--mint)]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[var(--mint)]">
-              {connections.filter((c) => c.status === "active").length}
+            <div className="text-2xl font-bold">
+              {overview?.forwardingEnabled ? "Enabled" : "Disabled"}
             </div>
-            <p className="text-xs text-muted-foreground">Currently connected</p>
-          </CardContent>
-        </Card>
-
-        <Card className="gradient-card border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Blocked IPs</CardTitle>
-            <Shield className="h-4 w-4 text-red-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-400">
-              {connections.filter((c) => c.status === "blocked").length}
-            </div>
-            <p className="text-xs text-muted-foreground">Security blocks</p>
-          </CardContent>
-        </Card>
-
-        <Card className="gradient-card border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Open Ports</CardTitle>
-            <Globe className="h-4 w-4 text-[var(--emerald)]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[var(--emerald)]">
-              {rules.filter((r) => r.action === "allow" && r.enabled).length}
-            </div>
-            <p className="text-xs text-muted-foreground">Accessible services</p>
-          </CardContent>
-        </Card>
-
-        <Card className="gradient-card border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Firewall Rules</CardTitle>
-            <Lock className="h-4 w-4 text-yellow-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-400">{rules.filter((r) => r.enabled).length}</div>
-            <p className="text-xs text-muted-foreground">Active rules</p>
+            <p className="text-xs text-muted-foreground">
+              {overview?.forwardingEnabled
+                ? "Server is routing packets between interfaces"
+                : "Forwarding is turned off"}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Active Connections */}
       <Card className="gradient-card border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wifi className="h-5 w-5 text-[var(--mint)]" />
-            Active Connections
+            Network Interfaces
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {connections.map((connection) => (
-              <div
-                key={connection.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-[var(--mint)]/10">
-                    <Server className="h-4 w-4 text-[var(--mint)]" />
+          <div className="grid gap-4 md:grid-cols-2">
+            {interfaces.map((iface) => (
+              <Card key={iface.name} className="bg-background/40 border-border/40">
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold">{iface.name}</h3>
+                    <Badge
+                      variant="outline"
+                      className={iface.up ? "bg-[var(--mint)]/20 text-[var(--mint)] border-[var(--mint)]/30" : ""}
+                    >
+                      {iface.up ? "UP" : "DOWN"}
+                    </Badge>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{connection.ip}</span>
-                      <Badge variant="outline" className="text-xs">
-                        Port {connection.port}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {connection.protocol}
-                      </Badge>
-                      <Badge variant="outline" className={getStatusColor(connection.status)}>
-                        {connection.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{connection.location} connection</p>
+                  <p className="text-xs text-muted-foreground mb-2">MAC: {iface.macAddress ?? "Unknown"}</p>
+                  <div className="space-y-1 text-sm">
+                    {iface.ipv4.length > 0 && (
+                      <div>
+                        <span className="text-muted-foreground">IPv4:</span>{" "}
+                        {iface.ipv4.join(", ")}
+                      </div>
+                    )}
+                    {iface.ipv6.length > 0 && (
+                      <div>
+                        <span className="text-muted-foreground">IPv6:</span>{" "}
+                        {iface.ipv6.join(", ")}
+                      </div>
+                    )}
+                    {iface.ipv4.length === 0 && iface.ipv6.length === 0 && (
+                      <p className="text-muted-foreground text-xs">No addresses assigned.</p>
+                    )}
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={
-                      connection.status === "blocked"
-                        ? "border-[var(--mint)]/30 hover:bg-[var(--mint)]/10 text-[var(--mint)]"
-                        : "border-red-500/30 hover:bg-red-500/10 text-red-400"
-                    }
-                  >
-                    {connection.status === "blocked" ? "Unblock" : "Block"}
-                  </Button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
+            {interfaces.length === 0 && (
+              <p className="text-sm text-muted-foreground">No interfaces detected.</p>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Firewall Rules */}
       <Card className="gradient-card border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -182,49 +280,80 @@ export function Network() {
             Firewall Rules
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {rules.map((rule) => (
-              <div
-                key={rule.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-background/30 border border-border/30"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-[var(--mint)]/10">
-                    <Lock className="h-4 w-4 text-[var(--mint)]" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">{rule.name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        Port {rule.port}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {rule.protocol}
-                      </Badge>
-                      <Badge variant="outline" className={getActionColor(rule.action)}>
-                        {rule.action.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {rule.enabled ? "Rule is active" : "Rule is disabled"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">{rule.enabled ? "Enabled" : "Disabled"}</span>
-                    <Switch checked={rule.enabled} onCheckedChange={() => toggleRule(rule.id)} />
-                  </div>
-                  <Button variant="outline" size="sm" className="border-border/50 hover:bg-accent/50 bg-transparent">
-                    Edit
-                  </Button>
-                </div>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-4 md:flex-row">
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="allow-rule">Allow traffic</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="allow-rule"
+                  placeholder="e.g. ssh or 443/tcp"
+                  value={ruleInput}
+                  onChange={(event) => setRuleInput(event.target.value)}
+                  disabled={firewallBusy}
+                />
+                <Button onClick={() => void submitFirewallRule("allow", ruleInput)} disabled={firewallBusy}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Allow
+                </Button>
               </div>
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="deny-rule">Deny traffic</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="deny-rule"
+                  placeholder="e.g. 25/tcp"
+                  value={denyInput}
+                  onChange={(event) => setDenyInput(event.target.value)}
+                  disabled={firewallBusy}
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => void submitFirewallRule("deny", denyInput)}
+                  disabled={firewallBusy}
+                >
+                  Block
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Rules correspond to the output of <code className="text-xs">ufw status</code>
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => void reloadFirewall()}
+              disabled={firewallBusy}
+              className="border-border/50 hover:bg-accent/50 bg-transparent"
+            >
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Reload
+            </Button>
+          </div>
+
+          <div className="space-y-2 max-h-[20rem] overflow-y-auto">
+            {firewallRules.map((rule, index) => (
+              <Card key={`${rule}-${index}`} className="bg-background/30 border-border/30">
+                <CardContent className="py-3 px-4 text-sm">{rule}</CardContent>
+              </Card>
             ))}
+            {firewallRules.length === 0 && (
+              <p className="text-sm text-muted-foreground">No firewall rules have been defined yet.</p>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" onClick={() => void refreshOverview()} disabled={loading || firewallBusy}>
+          Refresh overview
+        </Button>
+      </div>
     </div>
   )
 }

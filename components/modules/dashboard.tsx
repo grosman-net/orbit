@@ -1,71 +1,55 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import type { ReactNode } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Cpu, MemoryStick, HardDrive, Network, Clock, Activity, Server, Zap } from "lucide-react"
-
-interface ServerStats {
-  cpu: number
-  memory: number
-  disk: number
-  network: number
-  uptime: number
-  processes: number
-}
+import { Activity, Clock, Cpu, HardDrive, MemoryStick, Network, Server, Zap } from "lucide-react"
 
 export function Dashboard() {
-  const [stats, setStats] = useState<ServerStats>({
-    cpu: 0,
-    memory: 0,
-    disk: 0,
-    network: 0,
-    uptime: 0,
-    processes: 0,
-  })
+  const [summary, setSummary] = useState<SystemSummary | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const loadStats = () => {
-      const savedStats = localStorage.getItem("orbit-server-stats")
-      if (savedStats) {
-        setStats(JSON.parse(savedStats))
+    let cancelled = false
+
+    const fetchSummary = async () => {
+      try {
+        const response = await fetch("/api/system/summary", { cache: "no-store" })
+        if (!response.ok) {
+          throw new Error(await response.text())
+        }
+        const data = (await response.json()) as SystemSummary
+        if (!cancelled) {
+          setSummary(data)
+          setError(null)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load system summary")
+        }
       }
     }
 
-    loadStats()
-
-    // Simulate real-time updates
     const interval = setInterval(() => {
-      setStats((prev) => ({
-        ...prev,
-        cpu: Math.max(10, Math.min(90, prev.cpu + (Math.random() - 0.5) * 10)),
-        memory: Math.max(20, Math.min(95, prev.memory + (Math.random() - 0.5) * 5)),
-        network: Math.max(0, Math.min(100, prev.network + (Math.random() - 0.5) * 20)),
-        uptime: prev.uptime + 1,
-      }))
-    }, 3000)
+      fetchSummary().catch(() => {})
+    }, 5000)
 
-    return () => clearInterval(interval)
+    fetchSummary().catch(() => {})
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [])
 
-  const formatUptime = (seconds: number) => {
-    const days = Math.floor(seconds / 86400)
-    const hours = Math.floor((seconds % 86400) / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    return `${days}d ${hours}h ${minutes}m`
-  }
-
-  const getStatusColor = (value: number, type: "cpu" | "memory" | "disk") => {
-    if (type === "disk") {
-      if (value > 80) return "text-red-400"
-      if (value > 60) return "text-yellow-400"
-      return "text-[var(--mint)]"
-    }
-    if (value > 80) return "text-red-400"
-    if (value > 60) return "text-yellow-400"
-    return "text-[var(--mint)]"
-  }
+  const cpuUsage = summary?.cpuUsage ?? 0
+  const memoryUsage = summary?.memoryUsage ?? 0
+  const diskUsage = summary?.diskUsage ?? 0
+  const networkRxMbps = summary ? summary.networkRx / 1024 / 1024 : 0
+  const networkTxMbps = summary ? summary.networkTx / 1024 / 1024 : 0
+  const networkCombined = networkRxMbps + networkTxMbps
 
   return (
     <div className="space-y-6">
@@ -80,57 +64,53 @@ export function Dashboard() {
         </Badge>
       </div>
 
+      {error && (
+        <Card className="border-red-500/50 bg-red-500/10">
+          <CardContent className="py-4">
+            <p className="text-sm text-red-200">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="gradient-card border-border/50 hover:border-[var(--mint)]/30 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">CPU Usage</CardTitle>
-            <Cpu className={`h-4 w-4 ${getStatusColor(stats.cpu, "cpu")}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.cpu.toFixed(1)}%</div>
-            <Progress value={stats.cpu} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">
-              {stats.cpu > 80 ? "High load" : stats.cpu > 60 ? "Moderate load" : "Normal"}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="CPU Usage"
+          icon={<Cpu className={`h-4 w-4 ${getStatusColor(cpuUsage, "cpu")}`} />}
+          value={`${cpuUsage.toFixed(1)}%`}
+          progress={cpuUsage}
+          footer={cpuUsage > 80 ? "High load" : cpuUsage > 60 ? "Moderate load" : "Normal"}
+        />
 
-        <Card className="gradient-card border-border/50 hover:border-[var(--mint)]/30 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
-            <MemoryStick className={`h-4 w-4 ${getStatusColor(stats.memory, "memory")}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.memory.toFixed(1)}%</div>
-            <Progress value={stats.memory} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">{((stats.memory * 16) / 100).toFixed(1)} GB / 16 GB</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Memory Usage"
+          icon={<MemoryStick className={`h-4 w-4 ${getStatusColor(memoryUsage, "memory")}`} />}
+          value={`${memoryUsage.toFixed(1)}%`}
+          progress={memoryUsage}
+          footer={
+            summary
+              ? `${formatBytes(summary.memoryUsed)} / ${formatBytes(summary.memoryTotal)}`
+              : "Calculating..."
+          }
+        />
 
-        <Card className="gradient-card border-border/50 hover:border-[var(--mint)]/30 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Disk Usage</CardTitle>
-            <HardDrive className={`h-4 w-4 ${getStatusColor(stats.disk, "disk")}`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.disk}%</div>
-            <Progress value={stats.disk} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">{((stats.disk * 500) / 100).toFixed(0)} GB / 500 GB</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Disk Usage"
+          icon={<HardDrive className={`h-4 w-4 ${getStatusColor(diskUsage, "disk")}`} />}
+          value={`${diskUsage.toFixed(1)}%`}
+          progress={diskUsage}
+          footer={
+            summary ? `${formatBytes(summary.diskUsed)} / ${formatBytes(summary.diskTotal)}` : "Calculating..."
+          }
+        />
 
-        <Card className="gradient-card border-border/50 hover:border-[var(--mint)]/30 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Network I/O</CardTitle>
-            <Network className="h-4 w-4 text-[var(--mint)]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold mb-2">{stats.network.toFixed(1)} MB/s</div>
-            <Progress value={Math.min(100, stats.network * 2)} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">Combined up/down</p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Network I/O"
+          icon={<Network className="h-4 w-4 text-[var(--mint)]" />}
+          value={`${networkCombined.toFixed(2)} MB/s`}
+          progress={Math.min(100, networkCombined)}
+          footer={`Down ${networkRxMbps.toFixed(2)} MB/s · Up ${networkTxMbps.toFixed(2)} MB/s`}
+        />
       </div>
 
       {/* System Info Grid */}
@@ -143,7 +123,9 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[var(--mint)] mb-2">{formatUptime(stats.uptime)}</div>
+            <div className="text-3xl font-bold text-[var(--mint)] mb-2">
+              {summary ? formatUptime(summary.uptimeSeconds) : "Loading..."}
+            </div>
             <p className="text-sm text-muted-foreground">System has been running continuously</p>
           </CardContent>
         </Card>
@@ -156,7 +138,9 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-[var(--mint)] mb-2">{stats.processes}</div>
+            <div className="text-3xl font-bold text-[var(--mint)] mb-2">
+              {summary ? summary.processCount : 0}
+            </div>
             <p className="text-sm text-muted-foreground">Currently running processes</p>
           </CardContent>
         </Card>
@@ -174,36 +158,112 @@ export function Dashboard() {
               <span className="text-xl font-bold text-[var(--mint)]">Operational</span>
             </div>
             <p className="text-sm text-muted-foreground">All systems running normally</p>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Load Average:{" "}
+              {summary
+                ? summary.loadAverage.map((value) => value.toFixed(2)).join(", ")
+                : "0.00, 0.00, 0.00"}
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {/* System Details */}
       <Card className="gradient-card border-border/50">
         <CardHeader>
           <CardTitle>Quick System Information</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">OS Version</p>
-              <p className="font-medium">Ubuntu 22.04.3 LTS</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Kernel</p>
-              <p className="font-medium">5.15.0-91-generic</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Architecture</p>
-              <p className="font-medium">x86_64</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Load Average</p>
-              <p className="font-medium">0.45, 0.52, 0.48</p>
-            </div>
+            <InfoItem label="Hostname" value={summary?.hostname ?? "Unknown"} />
+            <InfoItem label="OS Version" value={summary?.os ?? "Unknown"} />
+            <InfoItem label="Kernel" value={summary?.kernel ?? "Unknown"} />
+            <InfoItem label="Architecture" value={summary?.architecture ?? "Unknown"} />
           </div>
         </CardContent>
       </Card>
     </div>
   )
+}
+
+interface SystemSummary {
+  hostname: string
+  os: string
+  kernel: string
+  architecture: string
+  uptimeSeconds: number
+  cpuUsage: number
+  memoryUsage: number
+  memoryTotal: number
+  memoryUsed: number
+  diskUsage: number
+  diskTotal: number
+  diskUsed: number
+  networkRx: number
+  networkTx: number
+  processCount: number
+  loadAverage: [number, number, number]
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-muted-foreground">{label}</p>
+      <p className="font-medium break-words">{value}</p>
+    </div>
+  )
+}
+
+function StatCard({
+  title,
+  icon,
+  value,
+  progress,
+  footer,
+}: {
+  title: string
+  icon: ReactNode
+  value: string
+  progress: number
+  footer: string
+}) {
+  return (
+    <Card className="gradient-card border-border/50 hover:border-[var(--mint)]/30 transition-all duration-300">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold mb-2">{value}</div>
+        <Progress value={progress} className="h-2" />
+        <p className="text-xs text-muted-foreground mt-2">{footer}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400)
+  const hours = Math.floor((seconds % 86400) / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  return `${days}d ${hours}h ${minutes}m`
+}
+
+function getStatusColor(value: number, type: "cpu" | "memory" | "disk") {
+  if (type === "disk") {
+    if (value > 80) return "text-red-400"
+    if (value > 60) return "text-yellow-400"
+    return "text-[var(--mint)]"
+  }
+  if (value > 80) return "text-red-400"
+  if (value > 60) return "text-yellow-400"
+  return "text-[var(--mint)]"
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes <= 0) return "0 B"
+  const units = ["B", "KiB", "MiB", "GiB", "TiB"]
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / Math.pow(1024, exponent)
+  return `${value.toFixed(value >= 10 ? 1 : 2)} ${units[exponent]}`
 }

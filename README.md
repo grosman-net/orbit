@@ -8,20 +8,21 @@ Orbit is a lightweight, intuitive, and extensible control center that makes it e
 
 Managing servers shouldn't require deep terminal expertise. Orbit provides:
 
-- **1-Click Software Management** – Install or remove packages without touching the terminal
-- **Visual Service Control** – Start, stop, restart, or monitor system services through a clean web interface
-- **Smart Config Builder** – Generate correct configuration files with intuitive UI controls
-- **Comprehensive Monitoring** – Real-time visibility into CPU, RAM, Disk, and Network metrics
-- **Secure Architecture** – Lightweight agent-based design with minimal footprint
+- **Ubuntu-Ready Package Management** – Search, install, upgrade, or purge `apt` packages without leaving the UI
+- **Systemd Service Control** – Start, stop, restart, enable, or disable any systemd unit in one click
+- **Firewall & Networking** – Inspect interfaces, toggle UFW, and add allow/deny rules visually
+- **Smart Config Builder** – Safely edit curated configuration files (Nginx, SSH, UFW) with validation hints
+- **Comprehensive Monitoring** – Real-time CPU, RAM, disk, network, uptime, and process metrics from the OS
+- **Secure Architecture** – Uses audited command wrappers with optional password-less sudo configuration plus admin login
 - **Extensible Platform** – Modern API-first design for customization and integration
 
 ## 🏗️ Technology Stack
 
-- **Backend**: Go (REST/gRPC API)
-- **Agent**: Go or Rust (lightweight daemon)
-- **Frontend**: React + Tailwind CSS
-- **Storage**: PostgreSQL / SQLite
-- **Deployment**: Single-binary or containerized deployment
+- **Runtime**: Next.js 15 (App Router, Node.js runtime)
+- **Frontend**: React 19 + Tailwind CSS + Radix UI primitives
+- **Data Layer**: Direct integrations with Ubuntu tooling (`apt`, `systemctl`, `ufw`, `journalctl`, `getent`)
+- **Charts & UI**: Recharts, Lucide icons, shadcn/ui components
+- **CI/CD**: GitHub Actions (build + lint on push / PR)
 
 ## 📋 Project Roadmap
 
@@ -64,42 +65,83 @@ Managing servers shouldn't require deep terminal expertise. Orbit provides:
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Linux servers (Ubuntu 18.04+, CentOS 7+, or similar)
-- Systemd-based initialization system
-- Root or sudo access for agent installation
+
+- Ubuntu 20.04 or newer with `systemd`, `apt`, `ufw`, and `journalctl` available
+- Node.js 20+ and pnpm 9+
+- Orbit must run as root **or** the hosting user must have password-less sudo rights for the commands Orbit executes
+
+> 💡 Configure sudo by adding an entry such as:
+> ```
+> orbit ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt-cache, /usr/bin/dpkg-query, /usr/bin/systemctl, /usr/sbin/ufw, /usr/bin/journalctl, /usr/bin/getent, /usr/sbin/useradd, /usr/sbin/userdel, /usr/bin/passwd, /usr/bin/tee, /usr/bin/lastlog, /usr/bin/who, /usr/bin/ip, /usr/bin/ps, /usr/bin/df, /usr/bin/uname, /usr/bin/hostname
+> ```
+> Adjust the username and command paths to your environment.
 
 ### Quick Installation
-```bash
-# Installation script (coming soon)
-curl -sSL https://get.orbit.sh | bash
 
-# Or via Docker (coming soon)
-docker run -d -p 8080:8080 orbit/orbit:latest
+```bash
+# Clone the repository and checkout the Ubuntu-ready branch
+git clone https://github.com/orbit/orbit.git
+cd orbit
+git checkout ubuntu-ready
+
+# Run the guided installer (asks for install dir, port, admin credentials)
+sudo ./install-orbit.sh
 ```
 
 ### Basic Usage
-1. Install the Orbit agent on your servers
-2. Access the web UI at `https://your-orbit-server:8080`
-3. Add your servers to the dashboard
-4. Start managing packages, services, and configurations visually
+1. Open `http://<your-ip>:<port>` (default `http://<ip>:3333`) in a browser.
+2. Sign in using the admin username and password you entered during installation.
+3. Monitor CPU, memory, disk, network, uptime, and processes on the **Dashboard** or **Monitoring** tabs.
+4. Manage `apt` packages under **Packages**.
+5. Control `systemd` services in **Services**.
+6. Configure firewall and networking via **Network**.
+7. Edit curated configuration files in **Configuration Editor** (Settings).
+8. Review `journalctl` logs and manage server accounts in **Logs** and **Users**.
 
 ## 🛠️ Development
 
 ### Building from Source
+
 ```bash
-# Clone the repository
-git clone https://github.com/orbit/orbit.git
-cd orbit
-
-# Build the backend
-cd server
-go build -o orbit-server .
-
-# Build the frontend
-cd ../web
-npm install
-npm run build
+pnpm install       # install dependencies
+pnpm lint          # run TypeScript and ESLint checks
+pnpm build         # create a production build
+pnpm start         # start the production server
 ```
+
+GitHub Actions (`.github/workflows/ci.yml`) automatically run `pnpm install`, `pnpm lint`, and `pnpm build` for pushes and pull requests targeting `ubuntu-ready`, `dev`, or `main`.
+
+### Configuration
+
+- The installer (`install-orbit.sh`) automatically runs `pnpm run setup` and stores the selected values in `.env.production` inside the install directory. You can rerun `pnpm run setup` (or `make setup`) later if you need to regenerate credentials.
+- Key environment variables:
+  - `PORT` – HTTP port exposed by the panel (defaults to 3333)
+  - `NEXTAUTH_URL` – public URL used for auth callbacks
+  - `NEXTAUTH_SECRET` – secret used to sign sessions
+  - `ORBIT_ADMIN_USERNAME` / `ORBIT_ADMIN_PASSWORD_HASH` – administrator credentials (password stored as a bcrypt hash)
+- To update settings after installation, edit `.env.production` in the install directory and restart the service (`sudo systemctl restart orbit`).
+
+### Systemd Unit
+
+The installer generates and enables `/etc/systemd/system/orbit.service`. For manual customization you can use the example in `scripts/systemd/orbit.service`. Common commands:
+
+```bash
+# Restart the service
+sudo systemctl restart orbit
+
+# Follow logs
+sudo journalctl -u orbit -f
+```
+
+The service invokes `pnpm start`, which automatically honors the port and environment variables defined in `.env.production`.
+
+### Uninstall
+
+```bash
+sudo ./uninstall-orbit.sh
+```
+
+The uninstaller stops and disables the systemd unit, removes the install directory, and optionally deletes the system user created during installation.
 
 ### Contributing
 We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
@@ -110,11 +152,15 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 ## 📚 Documentation
 
-Comprehensive documentation is available at [docs.orbit.sh](https://docs.orbit.sh) (coming soon), including:
-- Installation guides for various environments
-- API reference and examples
-- Tutorials and how-to guides
-- Troubleshooting common issues
+This branch focuses on the Ubuntu integration. Key API endpoints (all under `/api/*`):
+
+- `/system/summary` – Real-time metrics: CPU, memory, disk, network, uptime, load averages, processes
+- `/packages` – List installed packages, search the archives, install/purge/update/upgrade
+- `/services` – Enumerate systemd units and issue `start`, `stop`, `restart`, `reload`, `enable`, `disable`
+- `/network` – Inspect interfaces, toggle UFW, add allow/deny rules, reload firewall
+- `/logs` – Stream `journalctl` entries with unit and priority filters
+- `/users` – List, create, lock/unlock, and delete Linux accounts
+- `/config` – Enumerate and edit curated configuration files (Nginx default site, sshd_config, UFW rules)
 
 ## 🤝 Community
 
