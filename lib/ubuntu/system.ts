@@ -25,10 +25,6 @@ export interface SystemSummary {
   loadAverage: [number, number, number]
 }
 
-let previousCpuSample: CpuSample | undefined
-let previousNetworkSample: NetworkSample | undefined
-let previousDiskSample: DiskSample | undefined
-
 interface CpuSample {
   idle: number
   total: number
@@ -45,6 +41,31 @@ interface DiskSample {
   readBytes: number
   writeBytes: number
   timestamp: number
+}
+
+// Thread-safe sample cache using Map to avoid race conditions between concurrent requests
+const sampleCache = new Map<string, CpuSample | NetworkSample | DiskSample>()
+const CACHE_EXPIRY_MS = 2000 // Cache samples for 2 seconds to allow proper rate calculation
+
+function getCachedSample<T extends CpuSample | NetworkSample | DiskSample>(
+  key: string,
+): T | undefined {
+  return sampleCache.get(key) as T | undefined
+}
+
+function setCachedSample<T extends CpuSample | NetworkSample | DiskSample>(
+  key: string,
+  sample: T,
+): void {
+  sampleCache.set(key, sample)
+  
+  // Auto-cleanup old entries to prevent memory leaks
+  setTimeout(() => {
+    const cached = sampleCache.get(key)
+    if (cached && 'timestamp' in cached && Date.now() - cached.timestamp > CACHE_EXPIRY_MS * 2) {
+      sampleCache.delete(key)
+    }
+  }, CACHE_EXPIRY_MS * 3)
 }
 
 export async function getSystemSummary(): Promise<SystemSummary> {
@@ -137,15 +158,17 @@ async function readUptime(): Promise<number> {
 
 async function readCpuUsage(): Promise<number> {
   const sample = await sampleCpu()
+  const previousCpuSample = getCachedSample<CpuSample>('cpu')
+  
   if (!previousCpuSample) {
-    previousCpuSample = sample
+    setCachedSample('cpu', sample)
     return 0
   }
 
   const idleDiff = sample.idle - previousCpuSample.idle
   const totalDiff = sample.total - previousCpuSample.total
 
-  previousCpuSample = sample
+  setCachedSample('cpu', sample)
 
   if (totalDiff === 0) {
     return 0
@@ -228,22 +251,23 @@ async function readSwapUsage(): Promise<{ usage: number; total: number; used: nu
 
 async function readNetworkUsage(): Promise<{ rx: number; tx: number }> {
   const sample = await sampleNetwork()
+  const previousNetworkSample = getCachedSample<NetworkSample>('network')
 
   if (!previousNetworkSample) {
-    previousNetworkSample = sample
+    setCachedSample('network', sample)
     return { rx: 0, tx: 0 }
   }
 
   const timeDiff = (sample.timestamp - previousNetworkSample.timestamp) / 1000
   if (timeDiff <= 0) {
-    previousNetworkSample = sample
+    setCachedSample('network', sample)
     return { rx: 0, tx: 0 }
   }
 
   const rxDiff = sample.rx - previousNetworkSample.rx
   const txDiff = sample.tx - previousNetworkSample.tx
 
-  previousNetworkSample = sample
+  setCachedSample('network', sample)
 
   return {
     rx: rxDiff / timeDiff,
@@ -276,21 +300,22 @@ async function sampleNetwork(): Promise<NetworkSample> {
 
 async function readDiskIo(): Promise<{ readBps: number; writeBps: number }> {
   const sample = await sampleDisk()
+  const previousDiskSample = getCachedSample<DiskSample>('disk')
 
   if (!previousDiskSample) {
-    previousDiskSample = sample
+    setCachedSample('disk', sample)
     return { readBps: 0, writeBps: 0 }
   }
 
   const timeDiff = (sample.timestamp - previousDiskSample.timestamp) / 1000
   if (timeDiff <= 0) {
-    previousDiskSample = sample
+    setCachedSample('disk', sample)
     return { readBps: 0, writeBps: 0 }
   }
 
   const readDiff = sample.readBytes - previousDiskSample.readBytes
   const writeDiff = sample.writeBytes - previousDiskSample.writeBytes
-  previousDiskSample = sample
+  setCachedSample('disk', sample)
 
   return {
     readBps: Math.max(readDiff / timeDiff, 0),

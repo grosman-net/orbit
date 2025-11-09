@@ -58,11 +58,36 @@ export async function reloadFirewall(): Promise<void> {
 }
 
 export async function allowFirewallRule(rule: string): Promise<void> {
+  validateFirewallRule(rule)
   await runCommand("ufw", ["allow", rule], { requireRoot: true })
 }
 
 export async function denyFirewallRule(rule: string): Promise<void> {
+  validateFirewallRule(rule)
   await runCommand("ufw", ["deny", rule], { requireRoot: true })
+}
+
+function validateFirewallRule(rule: string): void {
+  // Validate that the rule doesn't contain shell metacharacters or command injection attempts
+  // Valid UFW rules contain only: alphanumerics, dots, slashes, colons, dashes, and spaces
+  const validRulePattern = /^[a-zA-Z0-9.\/:, -]+$/
+  
+  if (!validRulePattern.test(rule)) {
+    throw new Error("Invalid firewall rule: contains forbidden characters")
+  }
+  
+  // Additional check: prevent common command injection patterns
+  const dangerousPatterns = [';', '|', '&', '$', '`', '(', ')', '<', '>', '\n', '\r']
+  for (const pattern of dangerousPatterns) {
+    if (rule.includes(pattern)) {
+      throw new Error("Invalid firewall rule: contains forbidden characters")
+    }
+  }
+  
+  // Check rule length to prevent buffer overflow attempts
+  if (rule.length > 256) {
+    throw new Error("Invalid firewall rule: exceeds maximum length")
+  }
 }
 
 async function getDefaultGateway(): Promise<string | undefined> {

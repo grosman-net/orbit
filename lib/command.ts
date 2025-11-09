@@ -1,4 +1,4 @@
-import { execFile as execFileCallback, ExecFileOptions } from "node:child_process"
+import { execFile as execFileCallback, ExecFileOptions, spawn } from "node:child_process"
 import { promisify } from "node:util"
 
 const execFile = promisify(execFileCallback)
@@ -23,6 +23,7 @@ export class CommandError extends Error {
 export interface RunCommandOptions extends ExecFileOptions {
   requireRoot?: boolean
   timeoutMs?: number
+  input?: string | Buffer
 }
 
 const DEFAULT_TIMEOUT = 30_000
@@ -32,10 +33,25 @@ export async function runCommand(
   args: string[] = [],
   options: RunCommandOptions = {},
 ): Promise<CommandResult> {
-  const { requireRoot, timeoutMs, ...execOptions } = options
+  const { requireRoot, timeoutMs, input, ...execOptions } = options
   const command = normalizeCommand(rawCommand, requireRoot === true)
 
   try {
+    // If input is provided, we need to use a different approach with stdin
+    if (input !== undefined) {
+      const result = await execFileWithInput(
+        command.binary,
+        [...command.args, ...args],
+        input,
+        {
+          maxBuffer: 10 * 1024 * 1024,
+          timeout: timeoutMs ?? DEFAULT_TIMEOUT,
+          ...execOptions,
+        }
+      )
+      return result
+    }
+
     const result = await execFile(command.binary, [...command.args, ...args], {
       maxBuffer: 10 * 1024 * 1024,
       timeout: timeoutMs ?? DEFAULT_TIMEOUT,
@@ -87,6 +103,54 @@ interface ExecFileError extends Error {
 
 function isExecFileError(error: unknown): error is ExecFileError {
   return typeof error === "object" && error !== null && "stderr" in error
+}
+
+async function execFileWithInput(
+  command: string,
+  args: string[],
+  input: string | Buffer,
+  options: ExecFileOptions,
+): Promise<CommandResult> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      ...options,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+
+    let stdout = ''
+    let stderr = ''
+
+    if (child.stdout) {
+      child.stdout.on('data', (data) => {
+        stdout += data.toString()
+      })
+    }
+
+    if (child.stderr) {
+      child.stderr.on('data', (data) => {
+        stderr += data.toString()
+      })
+    }
+
+    child.on('error', (error) => {
+      reject(error)
+    })
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr })
+      } else {
+        const message = stderr || stdout || `Command exited with code ${code}`
+        reject(new CommandError(message, stderr, code ?? undefined))
+      }
+    })
+
+    // Write input to stdin and close it
+    if (child.stdin) {
+      child.stdin.write(input)
+      child.stdin.end()
+    }
+  })
 }
 
 
