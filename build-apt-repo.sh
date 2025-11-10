@@ -17,8 +17,8 @@ mkdir -p ${REPO_DIR}/dists/${DIST}/main/binary-arm64
 
 # Copy .deb files to pool
 echo "Copying packages to pool..."
-cp dist/orbitctl_${VERSION}_amd64.deb ${REPO_DIR}/pool/main/
-cp dist/orbitctl_${VERSION}_arm64.deb ${REPO_DIR}/pool/main/
+cp dist/orbit_${VERSION}_amd64.deb ${REPO_DIR}/pool/main/
+cp dist/orbit_${VERSION}_arm64.deb ${REPO_DIR}/pool/main/
 
 # Generate Packages files
 echo "Generating Packages files..."

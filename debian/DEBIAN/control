@@ -5,6 +5,7 @@ Priority: optional
 Architecture: amd64
 Maintainer: grosman-net <https://github.com/grosman-net>
 Depends: systemd
+Provides: orbitctl
 Description: Modern server management panel for Ubuntu/Debian
  Orbit is a lightweight, modern server management panel built with Go.
  It provides a web-based interface for managing Ubuntu/Debian servers.
