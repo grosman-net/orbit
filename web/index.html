@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orbit - Server Management Panel</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="dark">
     <div id="app">
         <!-- Login Screen -->
         <div id="loginScreen" class="login-container">
@@ -82,28 +83,77 @@
 
             <main class="content">
                 <div id="sectionMonitoring" class="section active">
-                    <h1>System Monitoring</h1>
+                    <div class="section-header">
+                        <div>
+                            <h1>System Monitoring</h1>
+                            <p>Real-time performance metrics and historical data</p>
+                        </div>
+                        <div class="monitoring-controls">
+                            <label>
+                                <span>Refresh Interval:</span>
+                                <select id="refreshInterval">
+                                    <option value="3000">3 seconds</option>
+                                    <option value="5000" selected>5 seconds</option>
+                                    <option value="10000">10 seconds</option>
+                                    <option value="30000">30 seconds</option>
+                                </select>
+                            </label>
+                            <button id="exportData" class="btn-secondary">Export Data</button>
+                        </div>
+                    </div>
                     <div id="systemSummary" class="cards-grid"></div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>CPU & Memory Usage</h3>
+                            <canvas id="cpuMemChart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Network Traffic</h3>
+                            <canvas id="networkChart"></canvas>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="sectionPackages" class="section">
-                    <h1>Package Management</h1>
+                    <div class="section-header">
+                        <div>
+                            <h1>Package Management</h1>
+                            <p>Install, update, and remove system packages</p>
+                        </div>
+                        <div class="header-actions">
+                            <button id="btnUpdate" class="btn-secondary">Update Lists</button>
+                            <button id="btnUpgrade" class="btn-primary">Upgrade All</button>
+                        </div>
+                    </div>
                     <div class="toolbar">
                         <input type="text" id="packageSearch" placeholder="Search packages...">
-                        <button id="btnUpdate" class="btn-primary">Update</button>
-                        <button id="btnUpgrade" class="btn-primary">Upgrade</button>
+                        <button id="btnInstallPackage" class="btn-success">Install Package</button>
                     </div>
                     <div id="packagesList" class="table-container"></div>
                 </div>
 
                 <div id="sectionServices" class="section">
-                    <h1>System Services</h1>
+                    <div class="section-header">
+                        <div>
+                            <h1>System Services</h1>
+                            <p>Manage systemd services</p>
+                        </div>
+                        <button id="btnRefreshServices" class="btn-secondary">Refresh</button>
+                    </div>
                     <div id="servicesList" class="table-container"></div>
                 </div>
 
                 <div id="sectionNetwork" class="section">
-                    <h1>Network & Firewall</h1>
-                    <div id="networkInfo"></div>
+                    <div class="section-header">
+                        <div>
+                            <h1>Network & Firewall</h1>
+                            <p>Manage network interfaces and firewall rules</p>
+                        </div>
+                    </div>
+                    <div class="network-layout">
+                        <div id="networkInfo"></div>
+                        <div id="firewallRules"></div>
+                    </div>
                 </div>
 
                 <div id="sectionUsers" class="section">
@@ -115,8 +165,21 @@
                 </div>
 
                 <div id="sectionConfig" class="section">
-                    <h1>Configuration Files</h1>
-                    <div id="configList"></div>
+                    <div class="section-header">
+                        <div>
+                            <h1>Configuration Files</h1>
+                            <p>Edit system configuration files</p>
+                        </div>
+                        <button id="btnSaveConfig" class="btn-primary" style="display:none;">Save Changes</button>
+                    </div>
+                    <div class="config-layout">
+                        <div id="configList" class="config-sidebar"></div>
+                        <div id="configEditor" class="config-editor">
+                            <div class="config-editor-placeholder">
+                                Select a configuration file to edit
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="sectionLogs" class="section">

@@ -1,6 +1,11 @@
 // Global state
 let currentUser = null;
 let refreshInterval = null;
+let cpuMemChart = null;
+let networkChart = null;
+let metricsHistory = [];
+let currentConfig = null;
+let refreshRate = 5000;
 
 // API helpers
 async function api(endpoint, options = {}) {
@@ -55,6 +60,7 @@ function showApp() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('mainApp').style.display = 'flex';
     document.getElementById('currentUser').textContent = currentUser.username;
+    initCharts();
     loadMonitoring();
     startAutoRefresh();
 }
@@ -137,7 +143,99 @@ function startAutoRefresh() {
         if (activeSection && activeSection.id === 'sectionMonitoring') {
             loadMonitoring();
         }
-    }, 3000);
+    }, refreshRate);
+}
+
+// Refresh interval control
+document.getElementById('refreshInterval')?.addEventListener('change', (e) => {
+    refreshRate = parseInt(e.target.value);
+    startAutoRefresh();
+});
+
+// Export data
+document.getElementById('exportData')?.addEventListener('click', () => {
+    const data = JSON.stringify(metricsHistory, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orbit-metrics-${new Date().toISOString()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// Initialize charts
+function initCharts() {
+    const ctx1 = document.getElementById('cpuMemChart');
+    const ctx2 = document.getElementById('networkChart');
+    
+    if (!ctx1 || !ctx2) return;
+
+    cpuMemChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'CPU %',
+                    data: [],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Memory %',
+                    data: [],
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            },
+            plugins: {
+                legend: { labels: { color: '#fafafa' } }
+            }
+        }
+    });
+
+    networkChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'RX (MB/s)',
+                    data: [],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'TX (MB/s)',
+                    data: [],
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            },
+            plugins: {
+                legend: { labels: { color: '#fafafa' } }
+            }
+        }
+    });
 }
 
 // Monitoring
@@ -145,9 +243,45 @@ async function loadMonitoring() {
     try {
         const summary = await api('/system/summary');
         displaySystemSummary(summary);
+        updateCharts(summary);
+        
+        // Store in history
+        metricsHistory.push({
+            timestamp: new Date().toISOString(),
+            ...summary
+        });
+        if (metricsHistory.length > 100) metricsHistory.shift();
     } catch (error) {
         console.error('Failed to load monitoring:', error);
     }
+}
+
+function updateCharts(data) {
+    if (!cpuMemChart || !networkChart) return;
+
+    const time = new Date().toLocaleTimeString();
+
+    // CPU/Memory chart
+    cpuMemChart.data.labels.push(time);
+    cpuMemChart.data.datasets[0].data.push(data.cpuUsage.toFixed(1));
+    cpuMemChart.data.datasets[1].data.push(data.memUsage.toFixed(1));
+    if (cpuMemChart.data.labels.length > 20) {
+        cpuMemChart.data.labels.shift();
+        cpuMemChart.data.datasets[0].data.shift();
+        cpuMemChart.data.datasets[1].data.shift();
+    }
+    cpuMemChart.update('none');
+
+    // Network chart
+    networkChart.data.labels.push(time);
+    networkChart.data.datasets[0].data.push((data.networkRxBps / 1024 / 1024).toFixed(2));
+    networkChart.data.datasets[1].data.push((data.networkTxBps / 1024 / 1024).toFixed(2));
+    if (networkChart.data.labels.length > 20) {
+        networkChart.data.labels.shift();
+        networkChart.data.datasets[0].data.shift();
+        networkChart.data.datasets[1].data.shift();
+    }
+    networkChart.update('none');
 }
 
 function displaySystemSummary(data) {
@@ -225,20 +359,53 @@ function displayPackages(packages) {
                     <th>Name</th>
                     <th>Version</th>
                     <th>Description</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 ${packages.slice(0, 100).map(pkg => `
                     <tr>
-                        <td>${pkg.name}</td>
+                        <td><strong>${pkg.name}</strong></td>
                         <td>${pkg.version}</td>
                         <td>${pkg.description || '-'}</td>
+                        <td>
+                            <div class="package-actions">
+                                <button class="btn-danger" onclick="removePackage('${pkg.name}')">Remove</button>
+                                <button class="btn-danger" onclick="purgePackage('${pkg.name}')">Purge</button>
+                            </div>
+                        </td>
                     </tr>
                 `).join('')}
             </tbody>
         </table>
     `;
 }
+
+window.removePackage = async function(name) {
+    if (!confirm(`Remove package ${name}?`)) return;
+    try {
+        await api('/packages/remove', {
+            method: 'POST',
+            body: JSON.stringify({ package: name, purge: false }),
+        });
+        loadPackages();
+    } catch (error) {
+        alert('Failed to remove package: ' + error.message);
+    }
+};
+
+window.purgePackage = async function(name) {
+    if (!confirm(`Purge package ${name} (including config files)?`)) return;
+    try {
+        await api('/packages/remove', {
+            method: 'POST',
+            body: JSON.stringify({ package: name, purge: true }),
+        });
+        loadPackages();
+    } catch (error) {
+        alert('Failed to purge package: ' + error.message);
+    }
+};
 
 document.getElementById('packageSearch').addEventListener('input', debounce(async (e) => {
     const query = e.target.value.trim();
@@ -253,6 +420,21 @@ document.getElementById('packageSearch').addEventListener('input', debounce(asyn
         console.error('Search failed:', error);
     }
 }, 500));
+
+document.getElementById('btnInstallPackage')?.addEventListener('click', async () => {
+    const pkg = prompt('Enter package name to install:');
+    if (!pkg) return;
+    try {
+        await api('/packages/install', {
+            method: 'POST',
+            body: JSON.stringify({ package: pkg }),
+        });
+        alert('Package installed successfully');
+        loadPackages();
+    } catch (error) {
+        alert('Failed to install: ' + error.message);
+    }
+});
 
 document.getElementById('btnUpdate').addEventListener('click', async () => {
     if (!confirm('Update package lists?')) return;
@@ -299,19 +481,21 @@ function displayServices(services) {
                     <th>Service</th>
                     <th>Status</th>
                     <th>Description</th>
-                    <th>Actions</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 ${services.map(svc => `
                     <tr>
-                        <td>${svc.unit}</td>
+                        <td><strong>${svc.unit}</strong></td>
                         <td><span class="status status-${getStatusClass(svc.active)}">${svc.active}</span></td>
                         <td>${svc.description}</td>
                         <td>
-                            <button class="btn-success" onclick="serviceAction('${svc.unit}', 'start')">Start</button>
-                            <button class="btn-danger" onclick="serviceAction('${svc.unit}', 'stop')">Stop</button>
-                            <button class="btn-primary" onclick="serviceAction('${svc.unit}', 'restart')">Restart</button>
+                            <div class="service-actions">
+                                <button class="btn-success" onclick="serviceAction('${svc.unit}', 'start')">Start</button>
+                                <button class="btn-danger" onclick="serviceAction('${svc.unit}', 'stop')">Stop</button>
+                                <button class="btn-secondary" onclick="serviceAction('${svc.unit}', 'restart')">Restart</button>
+                            </div>
                         </td>
                     </tr>
                 `).join('')}
@@ -335,6 +519,8 @@ window.serviceAction = async function(unit, action) {
     }
 };
 
+document.getElementById('btnRefreshServices')?.addEventListener('click', loadServices);
+
 // Network
 async function loadNetwork() {
     try {
@@ -346,12 +532,14 @@ async function loadNetwork() {
 }
 
 function displayNetwork(data) {
-    const container = document.getElementById('networkInfo');
-    container.innerHTML = `
-        <div class="card" style="margin-bottom: 20px;">
+    const infoContainer = document.getElementById('networkInfo');
+    const rulesContainer = document.getElementById('firewallRules');
+    
+    infoContainer.innerHTML = `
+        <div class="card">
             <h3>Firewall Status</h3>
             <div class="card-value">${data.firewallStatus}</div>
-            <div style="margin-top: 12px;">
+            <div style="margin-top: 16px; display: flex; gap: 12px;">
                 <button class="btn-success" onclick="firewallAction('enable')">Enable</button>
                 <button class="btn-danger" onclick="firewallAction('disable')">Disable</button>
             </div>
@@ -359,14 +547,27 @@ function displayNetwork(data) {
         <div class="card">
             <h3>Network Interfaces</h3>
             ${data.interfaces.map(iface => `
-                <div style="margin-bottom: 12px;">
-                    <strong>${iface.name}</strong> (${iface.state})
-                    <div class="card-detail">
+                <div style="margin-bottom: 12px; padding: 12px; background: var(--accent); border-radius: var(--radius);">
+                    <strong>${iface.name}</strong> <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
+                    <div class="card-detail" style="margin-top: 4px;">
                         ${iface.addresses.join(', ')}
                     </div>
                 </div>
             `).join('')}
         </div>
+    `;
+
+    rulesContainer.innerHTML = `
+        <h3>Firewall Rules</h3>
+        <div style="margin-bottom: 16px; display: flex; gap: 8px;">
+            <button class="btn-success" onclick="addFirewallRule()">Add Rule</button>
+        </div>
+        ${data.firewallRules.map((rule, idx) => `
+            <div class="firewall-rule-item">
+                <code>${rule}</code>
+                <button class="btn-danger" onclick="deleteFirewallRule('${idx + 1}')">Delete</button>
+            </div>
+        `).join('')}
     `;
 }
 
@@ -376,6 +577,34 @@ window.firewallAction = async function(action) {
         setTimeout(loadNetwork, 500);
     } catch (error) {
         alert(`Failed to ${action} firewall: ` + error.message);
+    }
+};
+
+window.addFirewallRule = async function() {
+    const port = prompt('Enter port:');
+    if (!port) return;
+    const protocol = prompt('Enter protocol (tcp/udp):', 'tcp');
+    try {
+        await api('/network/firewall/allow', {
+            method: 'POST',
+            body: JSON.stringify({ port, protocol }),
+        });
+        loadNetwork();
+    } catch (error) {
+        alert('Failed to add rule: ' + error.message);
+    }
+};
+
+window.deleteFirewallRule = async function(ruleNum) {
+    if (!confirm('Delete this rule?')) return;
+    try {
+        await api('/network/firewall/delete', {
+            method: 'POST',
+            body: JSON.stringify({ rule: ruleNum }),
+        });
+        loadNetwork();
+    } catch (error) {
+        alert('Failed to delete rule: ' + error.message);
     }
 };
 
@@ -405,20 +634,22 @@ function displayUsers(users) {
                     <th>Home</th>
                     <th>Shell</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 ${users.map(user => `
                     <tr>
-                        <td>${user.username}</td>
+                        <td><strong>${user.username}</strong></td>
                         <td>${user.uid}</td>
                         <td>${user.home}</td>
                         <td>${user.shell}</td>
                         <td><span class="status ${user.locked ? 'status-inactive' : 'status-active'}">${user.locked ? 'Locked' : 'Active'}</span></td>
                         <td>
-                            ${!user.locked ? `<button class="btn-danger" onclick="userAction('${user.username}', 'lock')">Lock</button>` : `<button class="btn-success" onclick="userAction('${user.username}', 'unlock')">Unlock</button>`}
-                            <button class="btn-danger" onclick="userAction('${user.username}', 'delete')">Delete</button>
+                            <div class="service-actions">
+                                ${!user.locked ? `<button class="btn-danger" onclick="userAction('${user.username}', 'lock')">Lock</button>` : `<button class="btn-success" onclick="userAction('${user.username}', 'unlock')">Unlock</button>`}
+                                <button class="btn-danger" onclick="userAction('${user.username}', 'delete')">Delete</button>
+                            </div>
                         </td>
                     </tr>
                 `).join('')}
@@ -466,34 +697,47 @@ async function loadConfigs() {
 
 function displayConfigs(configs) {
     const container = document.getElementById('configList');
-    container.innerHTML = `
-        <div class="config-list">
-            ${configs.map(cfg => `
-                <div class="config-item" onclick="editConfig('${cfg.id}')">
-                    <h3>${cfg.name}</h3>
-                    <p>${cfg.description}</p>
-                    <div class="card-detail">${cfg.path}</div>
-                </div>
-            `).join('')}
+    container.innerHTML = configs.map(cfg => `
+        <div class="config-item" onclick="loadConfigContent('${cfg.id}')">
+            <h3>${cfg.name}</h3>
+            <p>${cfg.description}</p>
         </div>
-    `;
+    `).join('');
 }
 
-window.editConfig = async function(id) {
+window.loadConfigContent = async function(id) {
     try {
         const data = await api(`/config/${id}`);
-        const newContent = prompt('Edit configuration:', data.content);
-        if (newContent !== null && newContent !== data.content) {
-            await api(`/config/${id}`, {
-                method: 'POST',
-                body: JSON.stringify({ content: newContent }),
-            });
-            alert('Configuration saved');
-        }
+        currentConfig = { id, content: data.content };
+        
+        document.querySelectorAll('.config-item').forEach(el => el.classList.remove('active'));
+        event.target.closest('.config-item').classList.add('active');
+        
+        const editor = document.getElementById('configEditor');
+        editor.innerHTML = `<textarea id="configTextarea">${data.content}</textarea>`;
+        document.getElementById('btnSaveConfig').style.display = 'block';
     } catch (error) {
-        alert('Failed to edit config: ' + error.message);
+        alert('Failed to load config: ' + error.message);
     }
 };
+
+document.getElementById('btnSaveConfig')?.addEventListener('click', async () => {
+    if (!currentConfig) return;
+    
+    const textarea = document.getElementById('configTextarea');
+    const newContent = textarea.value;
+    
+    try {
+        await api(`/config/${currentConfig.id}`, {
+            method: 'POST',
+            body: JSON.stringify({ content: newContent }),
+        });
+        alert('Configuration saved successfully');
+        currentConfig.content = newContent;
+    } catch (error) {
+        alert('Failed to save config: ' + error.message);
+    }
+});
 
 // Logs
 document.getElementById('btnLoadLogs').addEventListener('click', async () => {
@@ -543,4 +787,3 @@ function debounce(func, wait) {
 
 // Initialize
 checkSession();
-
