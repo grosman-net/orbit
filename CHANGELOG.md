@@ -5,6 +5,21 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-11-10
+
+### Fixed
+- **Installation Error on Upgrade** ("Text file busy")
+  - `install.sh` now stops running `orbit` service before replacing binaries
+  - Prevents `cp: cannot create regular file: Text file busy` error
+  - Service automatically restarts after installation completes
+  - Fixes upgrade path for systems with orbit already running
+
+### Technical Details
+- Added systemctl check before binary installation
+- Added `systemctl stop orbit` before copying binaries
+- Service restarts via `systemctl restart orbit` at end of installation
+- Safe for both fresh installs and upgrades
+
 ## [1.0.4] - 2025-11-10
 
 ### Added

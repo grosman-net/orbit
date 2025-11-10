@@ -4,6 +4,65 @@ This file contains release notes for all versions of Orbit.
 
 ---
 
+## v1.0.5 - Installation Upgrade Fix (2025-11-10)
+
+**Type**: Patch Release (Bugfix)  
+**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Architecture**: amd64, arm64
+
+### 🐛 Fixed
+
+**"Text file busy" Error on Upgrade**
+
+When running `sudo ./install.sh` on a system where Orbit was already installed and running, the installation would fail with:
+
+```
+cp: cannot create regular file '/usr/local/bin/orbit': Text file busy
+```
+
+**Root Cause**: The running `orbit` binary cannot be replaced while in use by the systemd service.
+
+**Solution**: The installer now automatically stops the service before replacing binaries, then restarts it after installation completes.
+
+### Installation
+
+```bash
+git clone https://github.com/grosman-net/orbit.git
+cd orbit
+sudo ./install.sh
+# ✅ Now works perfectly for both fresh installs AND upgrades
+```
+
+### What Changed
+
+**Before (v1.0.4)**:
+```bash
+sudo ./install.sh
+# ❌ Error: Text file busy (if orbit service was running)
+```
+
+**After (v1.0.5)**:
+```bash
+sudo ./install.sh
+# ✅ Automatically stops service
+# ✅ Replaces binaries
+# ✅ Restarts service
+# ✅ Success!
+```
+
+### Upgrade from v1.0.4
+
+Simply pull and install:
+
+```bash
+cd /path/to/orbit
+git pull origin main
+sudo ./install.sh
+# ✅ Works now!
+```
+
+---
+
 ## v1.0.4 - First Login Password Change (2025-11-10)
 
 **Type**: Minor Release (Feature Enhancement)  
