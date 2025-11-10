@@ -1,257 +1,365 @@
-# Orbit
+# 🛰️ Orbit - Server Management Panel
 
-Lightweight server management panel for Ubuntu/Debian. Single binary, no dependencies, full control.
+**Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
-## Features
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
+![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
 
-- 📊 **Real-time Monitoring**: CPU, RAM, disk, network, swap, I/O, load average
-- 📦 **Package Management**: Install, remove, update APT packages
-- ⚙️ **Service Control**: Manage systemd services
-- 🌐 **Network**: UFW firewall, interface monitoring
-- 👥 **User Management**: Create, lock, unlock, delete users
-- 📝 **Config Editor**: Edit system config files (Nginx, SSH, etc.)
-- 📋 **Logs**: View systemd service logs
-- 🔒 **Secure**: Password-protected with bcrypt, session-based auth
+---
 
-## Quick Install
+## ✨ Features
 
-### Download Pre-built Binary
+### 📊 System Monitoring
+- Real-time CPU, memory, disk, and network metrics
+- Interactive charts with Chart.js
+- Configurable refresh intervals (3s, 5s, 10s, 30s)
+- Export system metrics to human-readable TXT format
+- Load average, uptime, process count
+
+### 📦 Package Management
+- List installed packages (APT)
+- Search and install new packages
+- Remove or purge packages
+- Update package lists and upgrade all packages
+- Package name validation for security
+
+### ⚙️ Service Management
+- List all systemd services
+- Start, stop, restart services
+- Enable/disable services at boot
+- View service status and descriptions
+
+### 🌐 Network & Firewall
+- **Interface Management**: View and control network interfaces (up/down)
+- **IP Configuration**: Set IP addresses with subnet masks
+- **Gateway Configuration**: Configure gateways with persistent netplan support
+- **Routing Table**: View, add, and delete routes
+- **UFW Firewall**: Enable/disable firewall, manage rules
+- **Real-time Updates**: All changes reflected immediately
+
+### 👥 User Management
+- List system users
+- Create new users
+- Lock/unlock user accounts
+- Delete users
+- View last login information
+
+### 📝 Configuration File Editor
+- **RAW Mode**: Direct text editing of config files
+- **INTERACTIVE Mode**: Visual form-based editing with:
+  - Enable/Disable toggles for each option
+  - Type-specific inputs (text, number, select)
+  - Real-time validation
+  - Comment management (#)
+- **Supported Configs**:
+  - SSH (`/etc/ssh/sshd_config`)
+  - UFW (`/etc/default/ufw`)
+  - Nginx (`/etc/nginx/nginx.conf`)
+
+### 📋 System Logs
+- View systemd journal logs
+- Filter by service unit
+- Real-time log viewing
+
+### 🔐 Security
+- **Bcrypt password hashing**
+- **Session-based authentication** with HTTP-only cookies
+- **Input validation** on all user inputs
+- **Shell injection protection**
+- **Package name validation**
+- **Netplan config validation**
+
+---
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
-# For x86_64 (most common)
-wget https://github.com/yourusername/orbit/releases/latest/download/orbit-linux-amd64
-wget https://github.com/yourusername/orbit/releases/latest/download/orbit-setup-linux-amd64
+# Clone the repository
+git clone https://github.com/grosman-net/orbit.git
+cd orbit
 
-chmod +x orbit-linux-amd64 orbit-setup-linux-amd64
-sudo mv orbit-linux-amd64 /usr/local/bin/orbit
-sudo mv orbit-setup-linux-amd64 /usr/local/bin/orbit-setup
-
-# For ARM64
-# wget https://github.com/yourusername/orbit/releases/latest/download/orbit-linux-arm64
-# wget https://github.com/yourusername/orbit/releases/latest/download/orbit-setup-linux-arm64
+# Run installation script
+sudo ./install.sh
 ```
 
-### Configure
+The installer will:
+1. Check Go version (requires 1.21+)
+2. Build the project
+3. Run interactive setup (port, admin credentials)
+4. Install systemd service
+5. Start Orbit automatically
+
+### Manual Setup
 
 ```bash
-sudo mkdir -p /etc/orbit
-sudo orbit-setup
-```
+# Build from source
+make build
 
-### Create Service
+# Run setup wizard
+sudo ./orbit-setup
 
-```bash
-sudo tee /etc/systemd/system/orbit.service <<'EOF'
-[Unit]
-Description=Orbit Server Management Panel
-After=network.target
-
-[Service]
-Type=simple
-User=root
-ExecStart=/usr/local/bin/orbit --config /etc/orbit/config.json
-Restart=on-failure
-RestartSec=5s
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable orbit
+# Start the service
 sudo systemctl start orbit
+sudo systemctl enable orbit
 ```
 
 ### Access
 
+Open your browser and navigate to:
 ```
-http://<your-server-ip>:3333
-```
-
-Login with credentials from setup.
-
-## Build from Source
-
-**Requires Go 1.21+**
-
-```bash
-git clone https://github.com/yourusername/orbit.git
-cd orbit
-git checkout go-rewrite
-sudo ./install.sh
+http://your-server-ip:3333
 ```
 
-The install script handles everything automatically.
+Default credentials are set during installation.
 
-## Usage
+---
 
-### Service Management
+## 📖 Usage
 
-```bash
-sudo systemctl status orbit   # Check status
-sudo systemctl restart orbit  # Restart
-sudo systemctl stop orbit     # Stop
-sudo journalctl -u orbit -f   # View logs
-```
+### Monitoring
+- View real-time system metrics
+- Change refresh interval
+- Export metrics data
 
-### Configuration
+### Package Management
+- Search for packages in the toolbar
+- Click "Install Package" to add new software
+- Use "Remove" or "Purge" buttons for installed packages
+- "Update Lists" to refresh APT cache
+- "Upgrade All" to upgrade all packages
 
-Edit `/etc/orbit/config.json` or run `sudo orbit-setup` again.
+### Services
+- Browse all systemd services
+- Use Start/Stop/Restart buttons to control services
+- Services update automatically after actions
+
+### Network
+#### Interfaces
+- Each interface displays as a separate card
+- Use "Up"/"Down" buttons to change interface state
+- **Apply**: Set IP temporarily (until reboot)
+- **Apply & Save**: Set IP and save to netplan (persists after reboot)
+
+#### Firewall
+- Enable/Disable UFW firewall
+- Add rules by port and protocol
+- Delete existing rules
+
+#### Routing
+- View current routing table
+- Add new routes (destination, gateway, interface)
+- Delete routes
+
+### Configuration Files
+1. Select a config file from the sidebar
+2. **RAW Mode**: Edit configuration as plain text
+3. **INTERACTIVE Mode** (when available):
+   - Toggle options on/off (adds/removes `#`)
+   - Change values in type-appropriate fields
+   - See real-time status (Enabled/Disabled)
+4. Click "Save Changes"
+
+### Users
+- View all system users
+- Create new users with username and password
+- Lock/Unlock accounts
+- Delete users (with confirmation)
+
+### Logs
+- Enter service unit name (e.g., `nginx`, `ssh`)
+- Click "Load Logs" to view recent entries
+- Logs display in monospace for readability
+
+---
+
+## 🛠️ Configuration
+
+### Config File
+Location: `/orbit/config.json` or `/etc/orbit/config.json`
 
 ```json
 {
   "port": 3333,
-  "admin_username": "admin",
-  "admin_password_hash": "$2a$12$...",
-  "session_secret": "...",
-  "public_url": "http://185.105.118.251:3333"
+  "adminUsername": "admin",
+  "adminPasswordHash": "$2a$12$...",
+  "sessionSecret": "random-secret",
+  "publicURL": "http://your-server:3333"
 }
 ```
 
-### Command-Line Options
-
-```bash
-orbit --help
-orbit --port 8080
-orbit --config /path/to/config.json
-```
-
-### Uninstall
-
+### Changing Port
 ```bash
 sudo systemctl stop orbit
-sudo systemctl disable orbit
-sudo rm /etc/systemd/system/orbit.service
-sudo rm /usr/local/bin/orbit /usr/local/bin/orbit-setup
-sudo rm -rf /etc/orbit  # Optional: remove config
-sudo systemctl daemon-reload
+sudo ./orbit-setup
+# Enter new port
+sudo systemctl start orbit
 ```
 
-## Security
-
-**Important**: Orbit runs with root privileges to manage system services. Always use it securely:
-
-1. **Use HTTPS**: Put Orbit behind a reverse proxy with SSL/TLS
-2. **Firewall**: Restrict access to trusted IPs only
-3. **Strong Passwords**: Use complex, unique passwords
-4. **Keep Updated**: Update Orbit and your system regularly
-
-### Example Nginx Reverse Proxy
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name orbit.example.com;
-
-    ssl_certificate /etc/letsencrypt/live/orbit.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/orbit.example.com/privkey.pem;
-
-    location / {
-        proxy_pass http://127.0.0.1:3333;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-## Development
-
+### Resetting Admin Password
 ```bash
-# Build
-make build
-
-# Run locally
-make run
-
-# Build for all architectures
-make build-all
+sudo systemctl stop orbit
+sudo ./orbit-setup
+# Choose new password
+sudo systemctl start orbit
 ```
 
-### Project Structure
+---
 
+## 🏗️ Architecture
+
+### Backend (Go)
+- **Router**: `gorilla/mux`
+- **Sessions**: `gorilla/sessions` with secure cookies
+- **Password Hashing**: `bcrypt`
+- **Embedded Frontend**: Go `embed.FS`
+- **System Commands**: `os/exec` with validation
+
+### Frontend
+- **Vanilla JavaScript** (no framework dependencies)
+- **Chart.js** for real-time graphs
+- **Pure CSS** with dark theme and glassmorphism
+- **Responsive design** for mobile and desktop
+
+### Directory Structure
 ```
 orbit/
-├── main.go                    # Entry point
+├── cmd/
+│   └── setup/          # Interactive setup utility
 ├── internal/
-│   ├── api/                   # HTTP handlers
-│   ├── auth/                  # Authentication
-│   ├── system/                # Monitoring
-│   ├── packages/              # APT management
-│   ├── services/              # Systemd control
-│   ├── network/               # Network & firewall
-│   ├── users/                 # User management
-│   └── util/                  # Utilities
-├── cmd/setup/                 # Setup wizard
-└── web/                       # Frontend (embedded)
+│   ├── api/            # HTTP handlers
+│   ├── auth/           # Authentication logic
+│   ├── config/         # Configuration management
+│   ├── configfiles/    # Config file editing (RAW + Interactive)
+│   ├── network/        # Network management
+│   ├── packages/       # Package management
+│   ├── services/       # Systemd services
+│   ├── system/         # System metrics
+│   ├── users/          # User management
+│   └── util/           # Utility functions
+├── web/                # Frontend assets (embedded)
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js
+│   └── favicon.svg
+├── main.go             # Entry point
+├── Makefile
+├── install.sh
+├── uninstall.sh
+└── README.md
 ```
 
-## Troubleshooting
+---
 
-### Port Already in Use
+## 🔧 Development
 
+### Prerequisites
+- Go 1.21 or higher
+- Ubuntu/Debian system
+- `make`
+
+### Build
 ```bash
-sudo nano /etc/orbit/config.json  # Change port
-sudo systemctl restart orbit
+make build
 ```
 
-### Permission Errors
-
-Ensure Orbit runs as root:
-
+### Run Locally
 ```bash
-sudo systemctl edit orbit
+sudo ./orbit --config config.json --port 3333
 ```
 
-Add:
-
-```ini
-[Service]
-User=root
-```
-
-### Can't Access Panel
-
-Check firewall:
-
+### Clean Build
 ```bash
-sudo ufw allow 3333/tcp
-sudo ufw status
+make clean
+make build
 ```
 
-Check service:
+---
 
+## 🐛 Troubleshooting
+
+### Service Won't Start
 ```bash
-sudo systemctl status orbit
+# Check logs
 sudo journalctl -u orbit -n 50
+
+# Verify config
+cat /orbit/config.json
+
+# Check port availability
+sudo ss -tuln | grep 3333
 ```
 
-## Architecture
+### Permission Denied
+Orbit requires root privileges for system management. Run with `sudo` or via systemd service.
 
-- **Backend**: Go 1.21+ with Gorilla Mux
-- **Frontend**: Vanilla JavaScript, embedded at compile time
-- **Size**: ~15 MB single binary
-- **Dependencies**: None at runtime
+### Can't Login
+```bash
+# Reset credentials
+sudo systemctl stop orbit
+sudo ./orbit-setup
+sudo systemctl start orbit
+```
 
-## Why Go Rewrite?
+### Network Changes Don't Persist
+Ensure netplan is installed:
+```bash
+sudo apt install netplan.io
+```
 
-Previously Node.js/Next.js (~500 MB), now Go (~15 MB):
+---
 
-- ✅ 33x smaller
-- ✅ Zero runtime dependencies
-- ✅ Simpler installation
-- ✅ Better performance
-- ✅ Native system integration
+## 📝 Uninstallation
 
-## Contributing
+```bash
+cd /orbit
+sudo ./uninstall.sh
+```
 
-Contributions welcome! Open an issue or pull request.
+This will:
+- Stop and disable the service
+- Remove binaries
+- Remove configuration files
+- Clean up systemd service
 
-## License
+---
 
-MIT License - See LICENSE file
+## 🤝 Contributing
 
-## Credits
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
 
-Created for simple, efficient Ubuntu/Debian server management.
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Author**: grosman-net
+
+---
+
+## 🙏 Acknowledgments
+
+- Built with [Go](https://golang.org/)
+- Uses [Chart.js](https://www.chartjs.org/) for graphs
+- Inspired by modern server management tools
+- Dark theme with glassmorphism design
+
+---
+
+## 📞 Support
+
+- **Issues**: https://github.com/grosman-net/orbit/issues
+- **Documentation**: https://github.com/grosman-net/orbit/wiki
+
+---
+
+**Made with ❤️ for system administrators**

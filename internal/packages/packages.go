@@ -62,17 +62,39 @@ func Search(query string) ([]Package, error) {
 }
 
 func Install(pkg string) error {
+	// Validate package name
+	if !isValidPackageName(pkg) {
+		return fmt.Errorf("invalid package name: %s", pkg)
+	}
 	_, err := util.RunCommand("apt-get", "install", "-y", pkg)
 	return err
 }
 
 func Remove(pkg string, purge bool) error {
+	// Validate package name
+	if !isValidPackageName(pkg) {
+		return fmt.Errorf("invalid package name: %s", pkg)
+	}
 	action := "remove"
 	if purge {
 		action = "purge"
 	}
 	_, err := util.RunCommand("apt-get", action, "-y", pkg)
 	return err
+}
+
+// isValidPackageName checks if package name contains only allowed characters
+func isValidPackageName(pkg string) bool {
+	if pkg == "" {
+		return false
+	}
+	// Debian package names: lowercase, digits, +, -, .
+	for _, c := range pkg {
+		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.') {
+			return false
+		}
+	}
+	return true
 }
 
 func Update() error {

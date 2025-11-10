@@ -277,6 +277,13 @@ function initCharts() {
 async function loadMonitoring() {
     try {
         const summary = await api('/system/summary');
+        
+        // Validate summary data
+        if (!summary || typeof summary !== 'object') {
+            console.error('Invalid summary data received');
+            return;
+        }
+        
         displaySystemSummary(summary);
         updateCharts(summary);
         

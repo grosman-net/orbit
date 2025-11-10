@@ -1,6 +1,8 @@
 package network
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
 	"orbit/internal/util"
@@ -296,8 +298,11 @@ func DeleteRoute(destination string) error {
 
 // Persistent network configuration using netplan
 func SaveInterfaceConfig(iface, address, gateway string) error {
-	// This is a simplified version
-	// In production, you'd want to properly parse and modify existing netplan config
+	// Validate input to prevent injection
+	if strings.ContainsAny(iface, "'\"\n\r;&|`$()") {
+		return fmt.Errorf("invalid interface name")
+	}
+	
 	config := `network:
   version: 2
   renderer: networkd
@@ -313,14 +318,14 @@ func SaveInterfaceConfig(iface, address, gateway string) error {
 `
 	}
 
-	// Write to netplan config
-	_, err := util.RunCommand("sh", "-c", "echo '"+config+"' > /etc/netplan/99-orbit-"+iface+".yaml")
-	if err != nil {
+	// Write to netplan config using proper file writing instead of shell
+	filePath := "/etc/netplan/99-orbit-" + iface + ".yaml"
+	if err := os.WriteFile(filePath, []byte(config), 0644); err != nil {
 		return err
 	}
 
 	// Apply netplan
-	_, err = util.RunCommand("netplan", "apply")
+	_, err := util.RunCommand("netplan", "apply")
 	return err
 }
 
