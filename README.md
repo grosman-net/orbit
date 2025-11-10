@@ -2,7 +2,7 @@
 
 **Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
-![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![Version](https://img.shields.io/badge/version-1.0.5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
 ![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
