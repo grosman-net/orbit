@@ -9,19 +9,38 @@ chmod 755 /etc/orbit
 if [ ! -f /etc/orbit/config.json ]; then
     echo ""
     echo "═══════════════════════════════════════════════════════"
-    echo "  Orbit has been installed!"
+    echo "  Orbit Configuration"
     echo "═══════════════════════════════════════════════════════"
     echo ""
-    echo "Before starting the service, you need to configure Orbit:"
-    echo ""
-    echo "  sudo orbit-setup"
-    echo ""
-    echo "Then enable and start the service:"
-    echo ""
-    echo "  sudo systemctl enable orbit"
-    echo "  sudo systemctl start orbit"
+    
+    # Run interactive setup
+    /usr/local/bin/orbit-setup
+    
     echo ""
     echo "═══════════════════════════════════════════════════════"
+    echo "  Starting Orbit service..."
+    echo "═══════════════════════════════════════════════════════"
+    
+    # Enable and start service
+    systemctl daemon-reload
+    systemctl enable orbit
+    systemctl start orbit
+    
+    echo ""
+    echo "✅ Orbit is now running!"
+    echo ""
+    
+    # Show access info from config
+    if [ -f /etc/orbit/config.json ]; then
+        PORT=$(grep -Po '"port":\s*\K\d+' /etc/orbit/config.json 2>/dev/null || echo "3333")
+        USERNAME=$(grep -Po '"admin_username":\s*"\K[^"]+' /etc/orbit/config.json 2>/dev/null || echo "admin")
+        IP=$(ip route get 1.1.1.1 2>/dev/null | grep -Po 'src \K[\d.]+' || hostname -I | awk '{print $1}' || echo "localhost")
+        
+        echo "Access panel at: http://$IP:$PORT"
+        echo "Username: $USERNAME"
+        echo "Password: $USERNAME (change after first login)"
+    fi
+    echo ""
 else
     # Config exists, reload and restart service
     systemctl daemon-reload

@@ -2,20 +2,20 @@ Origin: Orbit
 Label: Orbit
 Suite: stable
 Codename: stable
-Version: 1.0.7
+Version: 1.0.8
 Architectures: amd64 arm64
 Components: main
 Description: Orbit Server Management Panel APT Repository
-Date: Mon, 10 Nov 2025 12:45:12 +0000
+Date: Mon, 10 Nov 2025 12:51:59 +0000
 MD5Sum:
-f6c4045300c5d0057962808502b6fb64   Release
-c5261f3d9fea68abbb452bcf4636ac78   main/binary-amd64/Packages
-fc205d08693de2922e07ee30f8482cf3   main/binary-amd64/Packages.gz
-8263b6d9cd1713c40ccceebe723fcc34   main/binary-arm64/Packages
-3e0b470e34c2ffb69208aad090c0d0c9   main/binary-arm64/Packages.gz
+99efa4ac3eb2684eca24ad3244136941   Release
+9ad1a8152f968d7106575b1eca67ef3f   main/binary-amd64/Packages
+da1f2df7ce6ec2765f7cdec94d296589   main/binary-amd64/Packages.gz
+475538f325bea8cd41149fa6db1bef7c   main/binary-arm64/Packages
+fe7e80be81b55fdcf75aad63765ff24e   main/binary-arm64/Packages.gz
 SHA256:
-ea253e40c6cd7220b2159dc27487d0dbb26671d9a21c108bb307d4a377ab511d   Release
-3603ad86b51489b689f87bd9a237f342c0c0345026500e34dd886c86a59efe39   main/binary-amd64/Packages
-69a0fd50f9c58467d48ce811ec9d59b66d9f2378416086a3fc23c8cc35110bd0   main/binary-amd64/Packages.gz
-6d55d75cd70d009c0d8591159d9a9f7ea7ead686075e78ba5639e67f2db17b1e   main/binary-arm64/Packages
-2c79e43912c1769652e90f5d420d93a53c7c78a7ea74535a31d3414bf5ef1d83   main/binary-arm64/Packages.gz
+57e733b9991765a343dba723bf76752553cef2dbbd4a45bbcc0aed52ee7691ba   Release
+e5ee3c606f1511dbef6fb68a80249d52781ac175fd464efccb71084197685708   main/binary-amd64/Packages
+d59f5d951cceb343d28336aca5a3c769589861db5585ceb03ac86a73b8208171   main/binary-amd64/Packages.gz
+7dc567c6c2d8e47de38a5143124c10eaf45fc64bd030ca3052efc65d67f75411   main/binary-arm64/Packages
+8365d80b1f2e2faffbc11fc71ec03a8fe748be0866c11c873ff6efb3da7577f7   main/binary-arm64/Packages.gz
