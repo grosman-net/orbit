@@ -1,0 +1,71 @@
+name: Build
+
+on:
+  push:
+    branches: [ go-rewrite, main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ go-rewrite, main ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux]
+        goarch: [amd64, arm64, arm]
+        
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23'
+
+    - name: Get dependencies
+      run: go mod download
+
+    - name: Build Orbit
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        go build -v -ldflags="-s -w" -o orbit-${{ matrix.goos }}-${{ matrix.goarch }} .
+        go build -v -ldflags="-s -w" -o orbit-setup-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/setup
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: orbit-${{ matrix.goos }}-${{ matrix.goarch }}
+        path: |
+          orbit-${{ matrix.goos }}-${{ matrix.goarch }}
+          orbit-setup-${{ matrix.goos }}-${{ matrix.goarch }}
+
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          orbit-linux-amd64/orbit-linux-amd64
+          orbit-linux-amd64/orbit-setup-linux-amd64
+          orbit-linux-arm64/orbit-linux-arm64
+          orbit-linux-arm64/orbit-setup-linux-arm64
+          orbit-linux-arm/orbit-linux-arm
+          orbit-linux-arm/orbit-setup-linux-arm
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

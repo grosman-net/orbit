@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit - Server Management Panel</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark">
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-box">
+                <div class="logo">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <circle cx="24" cy="24" r="3" fill="currentColor"/>
+                        <ellipse cx="24" cy="24" rx="20" ry="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                </div>
+                <h1>Orbit</h1>
+                <p class="subtitle">Server Management Panel</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div id="loginError" class="error" style="display:none;"></div>
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" style="display:none;">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo-small">
+                        <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="24" cy="24" r="3" fill="currentColor"/>
+                            <ellipse cx="24" cy="24" rx="20" ry="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                    <h2>Orbit</h2>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#monitoring" class="nav-link active" data-section="monitoring">
+                        <span class="icon">📊</span> Monitoring
+                    </a></li>
+                    <li><a href="#packages" class="nav-link" data-section="packages">
+                        <span class="icon">📦</span> Packages
+                    </a></li>
+                    <li><a href="#services" class="nav-link" data-section="services">
+                        <span class="icon">⚙️</span> Services
+                    </a></li>
+                    <li><a href="#network" class="nav-link" data-section="network">
+                        <span class="icon">🌐</span> Network
+                    </a></li>
+                    <li><a href="#users" class="nav-link" data-section="users">
+                        <span class="icon">👥</span> Users
+                    </a></li>
+                    <li><a href="#config" class="nav-link" data-section="config">
+                        <span class="icon">📝</span> Config Files
+                    </a></li>
+                    <li><a href="#logs" class="nav-link" data-section="logs">
+                        <span class="icon">📋</span> Logs
+                    </a></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <span id="currentUser"></span>
+                    </div>
+                    <button id="logoutBtn" class="btn-secondary">Log Out</button>
+                </div>
+            </nav>
+
+            <main class="content">
+                <div id="sectionMonitoring" class="section active">
+                    <div class="section-header">
+                        <div>
+                            <h1>System Monitoring</h1>
+                            <p>Real-time performance metrics and historical data</p>
+                        </div>
+                        <div class="monitoring-controls">
+                            <label>
+                                <span>Refresh Interval:</span>
+                                <select id="refreshInterval">
+                                    <option value="3000">3 seconds</option>
+                                    <option value="5000" selected>5 seconds</option>
+                                    <option value="10000">10 seconds</option>
+                                    <option value="30000">30 seconds</option>
+                                </select>
+                            </label>
+                            <button id="exportData" class="btn-secondary">Export Data</button>
+                        </div>
+                    </div>
+                    <div id="systemSummary" class="cards-grid"></div>
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>CPU & Memory Usage</h3>
+                            <canvas id="cpuMemChart"></canvas>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Network Traffic</h3>
+                            <canvas id="networkChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sectionPackages" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h1>Package Management</h1>
+                            <p>Install, update, and remove system packages</p>
+                        </div>
+                        <div class="header-actions">
+                            <button id="btnUpdate" class="btn-secondary">Update Lists</button>
+                            <button id="btnUpgrade" class="btn-primary">Upgrade All</button>
+                        </div>
+                    </div>
+                    <div class="toolbar">
+                        <input type="text" id="packageSearch" placeholder="Search packages...">
+                        <button id="btnInstallPackage" class="btn-success">Install Package</button>
+                    </div>
+                    <div id="packagesList" class="table-container"></div>
+                </div>
+
+                <div id="sectionServices" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h1>System Services</h1>
+                            <p>Manage systemd services</p>
+                        </div>
+                        <button id="btnRefreshServices" class="btn-secondary">Refresh</button>
+                    </div>
+                    <div id="servicesList" class="table-container"></div>
+                </div>
+
+                <div id="sectionNetwork" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h1>Network & Firewall</h1>
+                            <p>Manage network interfaces, routing, and firewall</p>
+                        </div>
+                        <button id="btnRefreshNetwork" class="btn-secondary">Refresh</button>
+                    </div>
+                    
+                    <div class="network-grid">
+                        <!-- Interfaces Section -->
+                        <div class="network-section">
+                            <h2>Network Interfaces</h2>
+                            <div id="networkInterfaces"></div>
+                        </div>
+
+                        <!-- Firewall Section -->
+                        <div class="network-section">
+                            <h2>Firewall</h2>
+                            <div id="firewallControl"></div>
+                            <h3 style="margin-top: 20px;">Firewall Rules</h3>
+                            <div id="firewallRules"></div>
+                        </div>
+
+                        <!-- Routing Section -->
+                        <div class="network-section">
+                            <h2>Routing Table</h2>
+                            <div id="routingTable"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sectionUsers" class="section">
+                    <h1>User Management</h1>
+                    <div class="toolbar">
+                        <button id="btnCreateUser" class="btn-primary">Create User</button>
+                    </div>
+                    <div id="usersList" class="table-container"></div>
+                </div>
+
+                <div id="sectionConfig" class="section">
+                    <div class="section-header">
+                        <div>
+                            <h1>Configuration Files</h1>
+                            <p>Edit system configuration files</p>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div class="mode-switcher" id="configModeSwitcher" style="display:none;">
+                                <button class="mode-btn active" data-mode="raw">RAW</button>
+                                <button class="mode-btn" data-mode="interactive">INTERACTIVE</button>
+                            </div>
+                            <button id="btnSaveConfig" class="btn-primary" style="display:none;">Save Changes</button>
+                        </div>
+                    </div>
+                    <div class="config-layout">
+                        <div id="configList" class="config-sidebar"></div>
+                        <div id="configEditor" class="config-editor">
+                            <div class="config-editor-placeholder">
+                                Select a configuration file to edit
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sectionLogs" class="section">
+                    <h1>System Logs</h1>
+                    <div class="toolbar">
+                        <input type="text" id="logsUnit" placeholder="Service unit name...">
+                        <button id="btnLoadLogs" class="btn-primary">Load Logs</button>
+                    </div>
+                    <pre id="logsOutput" class="logs-output"></pre>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
+
