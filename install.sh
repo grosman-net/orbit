@@ -116,6 +116,14 @@ else
     go build -o orbit-setup -ldflags="-s -w" ./cmd/setup
 fi
 
+# Stop service if running (to avoid "Text file busy" error)
+if systemctl is-active --quiet orbit 2>/dev/null; then
+    echo
+    echo "=== Stopping running Orbit service ==="
+    systemctl stop orbit
+    echo "✓ Service stopped"
+fi
+
 # Install binaries
 INSTALL_DIR="/usr/local/bin"
 echo
@@ -124,6 +132,7 @@ cp orbit "$INSTALL_DIR/"
 cp orbit-setup "$INSTALL_DIR/"
 chmod +x "$INSTALL_DIR/orbit"
 chmod +x "$INSTALL_DIR/orbit-setup"
+echo "✓ Binaries installed"
 
 # Create config directory
 mkdir -p /etc/orbit
