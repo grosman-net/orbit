@@ -49,10 +49,10 @@ EOF
 
 # Add file hashes to Release
 echo "MD5Sum:" >> dists/${DIST}/Release
-find dists/${DIST} -type f -exec md5sum {} \; | sed "s|dists/${DIST}/| |" >> dists/${DIST}/Release
+find dists/${DIST} -type f -name "Packages*" -exec md5sum {} \; | sed "s|dists/${DIST}/| |" >> dists/${DIST}/Release
 
 echo "SHA256:" >> dists/${DIST}/Release
-find dists/${DIST} -type f -exec sha256sum {} \; | sed "s|dists/${DIST}/| |" >> dists/${DIST}/Release
+find dists/${DIST} -type f -name "Packages*" -exec sha256sum {} \; | sed "s|dists/${DIST}/| |" >> dists/${DIST}/Release
 
 cd ..
 

@@ -6,10 +6,10 @@ Installed-Size: 8096
 Depends: systemd
 Provides: orbitctl
 Filename: pool/main/orbit_1.0.8_arm64.deb
-Size: 2035576
-MD5sum: e06ae50e628fef4b75adf811e06780b0
-SHA1: 0184ebb4c625bd113601f00cd9d25c7b379c9620
-SHA256: d09f80dfc83b98d341138d6f640bd11dd614bfef22b7172dc087b484ca39fc33
+Size: 2036344
+MD5sum: bb970203ad226f83c29e05b186889f93
+SHA1: a891bab468d72ce2bf7e7e3cb77fa81a43e5fc03
+SHA256: a2668bb28868ee0adc60403af373306ecd2a09f80ede70e515bd8b818a282d17
 Section: admin
 Priority: optional
 Homepage: https://github.com/grosman-net/orbit
