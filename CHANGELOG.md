@@ -5,6 +5,21 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-11-10
+
+### Fixed
+- **Release Archive Structure** (Critical)
+  - Archives now extract to proper directory (`orbit-VERSION-linux-ARCH/`)
+  - Fixed binary naming (normalized to `orbit` and `orbit-setup`)
+  - Fixed `install.sh` to correctly locate binaries
+  - All files now have correct permissions (chmod +x)
+  - Updated SHA256 checksums
+
+### Testing
+- Verified archive extraction creates proper directory structure
+- Verified `install.sh` works correctly with extracted files
+- Tested complete installation flow from download to service start
+
 ## [1.0.0] - 2025-11-10
 
 ### Added
