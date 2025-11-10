@@ -38,10 +38,14 @@ install_go() {
     GO_TARBALL="go${GO_VERSION}.linux-${GOARCH}.tar.gz"
     GO_URL="https://go.dev/dl/${GO_TARBALL}"
     
+    # Save current directory
+    local ORIG_DIR="$(pwd)"
+    
     echo "Downloading Go ${GO_VERSION}..."
     cd /tmp
     wget -q --show-progress "$GO_URL" || {
         echo "Error: Failed to download Go"
+        cd "$ORIG_DIR"
         exit 1
     }
     
@@ -49,6 +53,9 @@ install_go() {
     rm -rf /usr/local/go
     tar -C /usr/local -xzf "$GO_TARBALL"
     rm "$GO_TARBALL"
+    
+    # Return to original directory
+    cd "$ORIG_DIR"
     
     # Add to PATH
     export PATH=$PATH:/usr/local/go/bin
@@ -103,9 +110,8 @@ else
     
     install_go
     
-    # Now build
+    # Now build (we're already in the right directory)
     echo "=== Building Orbit from source ==="
-    cd "$(dirname "$0")"
     go build -o orbit -ldflags="-s -w" .
     go build -o orbit-setup -ldflags="-s -w" ./cmd/setup
 fi

@@ -5,6 +5,21 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2025-11-10
+
+### Fixed
+- **Critical Bug in install.sh** (Go Installation)
+  - Fixed: `install_go()` function now saves and restores current directory
+  - Fixed: Script was stuck in `/tmp` after Go installation
+  - Fixed: `go.mod file not found` error during build
+  - Added: Return to original directory after Go installation
+  - Removed: Redundant `cd "$(dirname "$0")"` after `install_go()`
+
+### Technical Details
+- `install_go()` now uses `local ORIG_DIR="$(pwd)"` to save directory
+- Returns to `$ORIG_DIR` after Go installation and cleanup
+- Ensures build happens in the correct project directory
+
 ## [1.0.2] - 2025-11-10
 
 ### Added
