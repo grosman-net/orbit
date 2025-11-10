@@ -2,7 +2,6 @@ import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { OrbitSessionProvider } from "@/components/session-provider"
 import "./globals.css"
@@ -11,6 +10,9 @@ export const metadata: Metadata = {
   title: "Orbit - Server Management Panel",
   description: "Professional server management and monitoring dashboard",
   generator: "v0.app",
+  icons: {
+    icon: "/orbit-logo.png",
+  },
 }
 
 export default function RootLayout({
@@ -24,7 +26,6 @@ export default function RootLayout({
         <OrbitSessionProvider>
           <Suspense fallback={null}>{children}</Suspense>
         </OrbitSessionProvider>
-        <Analytics />
       </body>
     </html>
   )

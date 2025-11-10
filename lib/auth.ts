@@ -40,13 +40,22 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Admin credentials are not configured.")
         }
         if (!credentials?.username || !credentials.password) {
+          console.warn("[Orbit] Login attempt with missing username or password.")
           return null
         }
         if (credentials.username !== ADMIN_USERNAME) {
+          console.warn("[Orbit] Login attempt with invalid username:", credentials.username)
           return null
         }
         const valid = await bcrypt.compare(credentials.password, ADMIN_PASSWORD_HASH)
         if (!valid) {
+          console.warn(
+            "[Orbit] Login attempt with invalid password for user:",
+            credentials.username,
+            "(hash prefix:",
+            ADMIN_PASSWORD_HASH.slice(0, 10),
+            ")",
+          )
           return null
         }
         return {

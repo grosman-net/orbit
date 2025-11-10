@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit - Server Management Panel</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-box">
+                <div class="logo">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <circle cx="24" cy="24" r="3" fill="currentColor"/>
+                        <ellipse cx="24" cy="24" rx="20" ry="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
+                </div>
+                <h1>Orbit</h1>
+                <p class="subtitle">Server Management Panel</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <div id="loginError" class="error" style="display:none;"></div>
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" style="display:none;">
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo-small">
+                        <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <circle cx="24" cy="24" r="3" fill="currentColor"/>
+                            <ellipse cx="24" cy="24" rx="20" ry="8" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                    </div>
+                    <h2>Orbit</h2>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#monitoring" class="nav-link active" data-section="monitoring">
+                        <span class="icon">📊</span> Monitoring
+                    </a></li>
+                    <li><a href="#packages" class="nav-link" data-section="packages">
+                        <span class="icon">📦</span> Packages
+                    </a></li>
+                    <li><a href="#services" class="nav-link" data-section="services">
+                        <span class="icon">⚙️</span> Services
+                    </a></li>
+                    <li><a href="#network" class="nav-link" data-section="network">
+                        <span class="icon">🌐</span> Network
+                    </a></li>
+                    <li><a href="#users" class="nav-link" data-section="users">
+                        <span class="icon">👥</span> Users
+                    </a></li>
+                    <li><a href="#config" class="nav-link" data-section="config">
+                        <span class="icon">📝</span> Config Files
+                    </a></li>
+                    <li><a href="#logs" class="nav-link" data-section="logs">
+                        <span class="icon">📋</span> Logs
+                    </a></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <span id="currentUser"></span>
+                    </div>
+                    <button id="logoutBtn" class="btn-secondary">Log Out</button>
+                </div>
+            </nav>
+
+            <main class="content">
+                <div id="sectionMonitoring" class="section active">
+                    <h1>System Monitoring</h1>
+                    <div id="systemSummary" class="cards-grid"></div>
+                </div>
+
+                <div id="sectionPackages" class="section">
+                    <h1>Package Management</h1>
+                    <div class="toolbar">
+                        <input type="text" id="packageSearch" placeholder="Search packages...">
+                        <button id="btnUpdate" class="btn-primary">Update</button>
+                        <button id="btnUpgrade" class="btn-primary">Upgrade</button>
+                    </div>
+                    <div id="packagesList" class="table-container"></div>
+                </div>
+
+                <div id="sectionServices" class="section">
+                    <h1>System Services</h1>
+                    <div id="servicesList" class="table-container"></div>
+                </div>
+
+                <div id="sectionNetwork" class="section">
+                    <h1>Network & Firewall</h1>
+                    <div id="networkInfo"></div>
+                </div>
+
+                <div id="sectionUsers" class="section">
+                    <h1>User Management</h1>
+                    <div class="toolbar">
+                        <button id="btnCreateUser" class="btn-primary">Create User</button>
+                    </div>
+                    <div id="usersList" class="table-container"></div>
+                </div>
+
+                <div id="sectionConfig" class="section">
+                    <h1>Configuration Files</h1>
+                    <div id="configList"></div>
+                </div>
+
+                <div id="sectionLogs" class="section">
+                    <h1>System Logs</h1>
+                    <div class="toolbar">
+                        <input type="text" id="logsUnit" placeholder="Service unit name...">
+                        <button id="btnLoadLogs" class="btn-primary">Load Logs</button>
+                    </div>
+                    <pre id="logsOutput" class="logs-output"></pre>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>
+

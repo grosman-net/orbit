@@ -1,183 +1,292 @@
-# Orbit 🚀
+# Orbit
 
-**Modern Server & Cluster Management for DevOps and Developers**
+**Orbit** is a lightweight server management panel for Ubuntu/Debian systems. It provides a modern web interface to monitor system resources, manage packages, control services, configure firewall rules, and more.
 
-Orbit is a lightweight, intuitive, and extensible control center that makes it effortless to install, configure, and monitor software on Linux servers. Bring Heroku-like simplicity to your own infrastructure without the complexity of Kubernetes or the legacy constraints of traditional control panels.
+## Features
 
-## ✨ Why Choose Orbit?
+- 🖥️ **System Monitoring**: Real-time CPU, memory, disk, network, and process statistics
+- 📦 **Package Management**: Install, remove, and search APT packages
+- ⚙️ **Service Control**: Start, stop, restart, and manage systemd services
+- 🌐 **Network Management**: View interfaces and control UFW firewall
+- 👥 **User Management**: Create, lock, unlock, and delete system users
+- 📝 **Configuration Editor**: Edit system config files (Nginx, SSH, etc.)
+- 📋 **Log Viewer**: View systemd service logs
+- 🔒 **Secure Authentication**: Password-protected web interface
 
-Managing servers shouldn't require deep terminal expertise. Orbit provides:
+## Architecture
 
-- **Ubuntu-Ready Package Management** – Search, install, upgrade, or purge `apt` packages without leaving the UI
-- **Systemd Service Control** – Start, stop, restart, enable, or disable any systemd unit in one click
-- **Firewall & Networking** – Inspect interfaces, toggle UFW, and add allow/deny rules visually
-- **Smart Config Builder** – Safely edit curated configuration files (Nginx, SSH, UFW) with validation hints
-- **Comprehensive Monitoring** – Real-time CPU, RAM, disk, network, uptime, and process metrics from the OS
-- **Secure Architecture** – Uses audited command wrappers with optional password-less sudo configuration plus admin login
-- **Extensible Platform** – Modern API-first design for customization and integration
+Orbit is built with **Go** and compiles into a single static binary with embedded frontend assets. This design eliminates runtime dependencies and simplifies deployment.
 
-## 🏗️ Technology Stack
+- **Backend**: Go 1.23+ with Gorilla Mux for routing
+- **Frontend**: Vanilla JavaScript with modern CSS
+- **Embedded Assets**: All HTML/CSS/JS bundled into the binary
+- **Authentication**: Session-based with bcrypt password hashing
 
-- **Runtime**: Next.js 15 (App Router, Node.js runtime)
-- **Frontend**: React 19 + Tailwind CSS + Radix UI primitives
-- **Data Layer**: Direct integrations with Ubuntu tooling (`apt`, `systemctl`, `ufw`, `journalctl`, `getent`)
-- **Charts & UI**: Recharts, Lucide icons, shadcn/ui components
-- **CI/CD**: GitHub Actions (build + lint on push / PR)
+## Requirements
 
-## 📋 Project Roadmap
+- **OS**: Ubuntu 20.04+ or Debian 11+ (Linux x86_64, ARM64, or ARM)
+- **Go**: 1.23 or later (only needed for building from source)
+- **Privileges**: Root access required for system management operations
 
-### Phase 1 – Core Platform (MVP) [In Progress]
-- Agent installation script (single command bootstrap)
-- Package manager integration (apt, yum, pacman)
-- Basic package actions (list, install, remove, upgrade)
-- Service management (systemd: start/stop/restart/status)
-- Web UI: authentication & secure sessions
-- Server overview dashboard (CPU, RAM, Disk, Uptime)
+## Quick Start
 
-### Phase 2 – Usability & Developer Experience
-- Config Builder UI – checkbox & dropdown based configuration
-- Auto-generate configs for Nginx, PostgreSQL, Redis, etc.
-- User roles & permissions (admin, dev, read-only)
-- Basic alerting system (CPU/RAM/Disk thresholds)
-- REST + gRPC API for automation
+### Installation
 
-### Phase 3 – Multi-Server & Clusters
-- Multi-node management (add/remove servers in one dashboard)
-- Cluster view (map of all nodes + health status)
-- Bulk actions (install/remove/update across servers)
-- SSH key & secrets manager
-- Simple backup/restore for configs
-
-### Phase 4 – Advanced Monitoring & Extensions
-- Real-time metrics (charts for CPU, RAM, Network, Disk I/O)
-- Log viewer with filtering & search
-- Plugin system for adding custom modules/packages
-- Integration with cloud providers (AWS, GCP, Azure, DigitalOcean)
-- API tokens for CI/CD pipelines
-
-### Phase 5 – Mobile & Enterprise Features
-- Mobile app (push notifications, quick actions like restart service)
-- Webhooks & integrations (Slack, Discord, PagerDuty)
-- Advanced RBAC (team management, org-level permissions)
-- Audit logs & compliance features
-- High-availability setup for Orbit itself
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Ubuntu 20.04 or newer with `systemd`, `apt`, `ufw`, and `journalctl` available
-- Node.js 20+ and pnpm 9+
-- Orbit must run as root **or** the hosting user must have password-less sudo rights for the commands Orbit executes
-
-> 💡 Configure sudo by adding an entry such as:
-> ```
-> orbit ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt-cache, /usr/bin/dpkg-query, /usr/bin/systemctl, /usr/sbin/ufw, /usr/bin/journalctl, /usr/bin/getent, /usr/sbin/useradd, /usr/sbin/userdel, /usr/bin/passwd, /usr/bin/tee, /usr/bin/lastlog, /usr/bin/who, /usr/bin/ip, /usr/bin/ps, /usr/bin/df, /usr/bin/uname, /usr/bin/hostname
-> ```
-> Adjust the username and command paths to your environment.
-
-### Quick Installation
+1. Clone the repository:
 
 ```bash
-# Clone the repository and checkout the Ubuntu-ready branch
-git clone https://github.com/orbit/orbit.git
+git clone https://github.com/yourusername/orbit.git
 cd orbit
-git checkout ubuntu-ready
-
-# Run the guided installer (asks for install dir, port, admin credentials)
-sudo ./install-orbit.sh
 ```
 
-### Basic Usage
-1. Open `http://<your-ip>:<port>` (default `http://<ip>:3333`) in a browser.
-2. Sign in using the admin username and password you entered during installation.
-3. Monitor CPU, memory, disk, network, uptime, and processes on the **Dashboard** or **Monitoring** tabs.
-4. Manage `apt` packages under **Packages**.
-5. Control `systemd` services in **Services**.
-6. Configure firewall and networking via **Network**.
-7. Edit curated configuration files in **Configuration Editor** (Settings).
-8. Review `journalctl` logs and manage server accounts in **Logs** and **Users**.
-
-## 🛠️ Development
-
-### Building from Source
+2. Run the installation script:
 
 ```bash
-pnpm install       # install dependencies
-pnpm lint          # run TypeScript and ESLint checks
-pnpm build         # create a production build
-pnpm start         # start the production server
+sudo ./install.sh
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) automatically run `pnpm install`, `pnpm lint`, and `pnpm build` for pushes and pull requests targeting `ubuntu-ready`, `dev`, or `main`.
+The installer will:
+- Build the Orbit binary
+- Install it to `/usr/local/bin`
+- Run the setup wizard to configure credentials and port
+- Create and start a systemd service
+
+3. Access the panel:
+
+```
+http://<your-server-ip>:3333
+```
+
+Use the credentials you configured during setup to log in.
 
 ### Configuration
 
-- The installer (`install-orbit.sh`) automatically runs `pnpm run setup` and stores the selected values in `.env.production` inside the install directory. You can rerun `pnpm run setup` (or `make setup`) later if you need to regenerate credentials.
-- Key environment variables:
-  - `PORT` – HTTP port exposed by the panel (defaults to 3333)
-  - `NEXTAUTH_URL` – public URL used for auth callbacks
-  - `NEXTAUTH_SECRET` – secret used to sign sessions
-  - `ORBIT_ADMIN_USERNAME` / `ORBIT_ADMIN_PASSWORD_HASH` – administrator credentials (password stored as a bcrypt hash)
-- To update settings after installation, edit `.env.production` in the install directory and restart the service (`sudo systemctl restart orbit`).
+The setup wizard (`orbit-setup`) will prompt you for:
 
-### Systemd Unit
+- **HTTP Port**: Port to listen on (default: 3333)
+- **Admin Username**: Username for authentication (default: admin)
+- **Admin Password**: Password (securely hashed with bcrypt)
+- **Public URL**: Base URL for the panel
 
-The installer generates and enables `/etc/systemd/system/orbit.service`. For manual customization you can use the example in `scripts/systemd/orbit.service`. Common commands:
+Configuration is stored in `/etc/orbit/config.json`.
+
+To reconfigure:
 
 ```bash
-# Restart the service
+sudo orbit-setup
+sudo systemctl restart orbit
+```
+
+### Uninstallation
+
+```bash
+sudo ./uninstall.sh
+```
+
+This will:
+- Stop and disable the orbit.service
+- Remove binaries from `/usr/local/bin`
+- Optionally remove `/etc/orbit/config.json`
+
+## Manual Build
+
+If you want to build manually:
+
+```bash
+# Build main binary
+go build -o orbit -ldflags="-s -w" .
+
+# Build setup tool
+go build -o orbit-setup -ldflags="-s -w" ./cmd/setup
+
+# Run setup
+sudo ./orbit-setup
+
+# Run Orbit
+sudo ./orbit --config /etc/orbit/config.json
+```
+
+## Makefile Targets
+
+- `make build`: Build the binaries
+- `make install`: Install Orbit (requires sudo)
+- `make uninstall`: Uninstall Orbit (requires sudo)
+- `make run`: Build and run locally with `config.json`
+- `make dev`: Run in development mode
+- `make setup`: Run the setup wizard
+- `make build-all`: Cross-compile for amd64, arm64, and arm
+
+## Usage
+
+### Managing the Service
+
+```bash
+# Start
+sudo systemctl start orbit
+
+# Stop
+sudo systemctl stop orbit
+
+# Restart
 sudo systemctl restart orbit
 
-# Follow logs
+# Status
+sudo systemctl status orbit
+
+# Logs
 sudo journalctl -u orbit -f
 ```
 
-The service invokes `pnpm start`, which automatically honors the port and environment variables defined in `.env.production`.
-
-### Uninstall
+### Command-Line Options
 
 ```bash
-sudo ./uninstall-orbit.sh
+orbit --help
 ```
 
-The uninstaller stops and disables the systemd unit, removes the install directory, and optionally deletes the system user created during installation.
+- `--port`: HTTP port (default: 3333)
+- `--config`: Path to config file (default: /etc/orbit/config.json)
 
-### Contributing
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
-- Code style and standards
-- Pull request process
-- Development environment setup
-- Testing requirements
+### Sudo Requirements
 
-## 📚 Documentation
+Orbit requires passwordless sudo access for system management commands. During installation, the service runs as root by default.
 
-This branch focuses on the Ubuntu integration. Key API endpoints (all under `/api/*`):
+If running as a non-root user, ensure the user has `NOPASSWD` sudo access:
 
-- `/system/summary` – Real-time metrics: CPU, memory, disk, network, uptime, load averages, processes
-- `/packages` – List installed packages, search the archives, install/purge/update/upgrade
-- `/services` – Enumerate systemd units and issue `start`, `stop`, `restart`, `reload`, `enable`, `disable`
-- `/network` – Inspect interfaces, toggle UFW, add allow/deny rules, reload firewall
-- `/logs` – Stream `journalctl` entries with unit and priority filters
-- `/users` – List, create, lock/unlock, and delete Linux accounts
-- `/config` – Enumerate and edit curated configuration files (Nginx default site, sshd_config, UFW rules)
+```bash
+echo "orbit ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/orbit
+```
 
-## 🤝 Community
+## Security Considerations
 
-Join our growing community:
-- **GitHub Discussions**: Ask questions and share ideas
-- **Discord Server**: Real-time chat with developers and users
-- **Twitter**: Follow [@orbit_sh](https://twitter.com/orbit_sh) for updates
-- **Blog**: Tutorials, case studies, and technical deep dives
+- **Run over HTTPS**: Use a reverse proxy (Nginx, Caddy) with SSL/TLS for production
+- **Firewall**: Restrict access to the Orbit port using UFW or iptables
+- **Strong Passwords**: Use strong, unique passwords for the admin account
+- **Updates**: Keep your system and Orbit up to date
 
-## 📄 License
+Example Nginx reverse proxy config:
 
-Orbit is open source software licensed under the [Apache 2.0 License](LICENSE) - free to use, modify, and distribute with patent protection.
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name orbit.example.com;
 
-## 🔮 Vision
+    ssl_certificate /etc/letsencrypt/live/orbit.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/orbit.example.com/privkey.pem;
 
-We believe server management should be accessible to every developer, not just infrastructure specialists. Orbit aims to democratize server management by providing beautiful, intuitive tools that abstract away complexity while maintaining flexibility and power.
+    location / {
+        proxy_pass http://127.0.0.1:3333;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
 
----
+## Development
 
-**Orbit** - Making server management effortless since 2025.
+### Project Structure
+
+```
+orbit/
+├── main.go                 # Application entry point
+├── go.mod                  # Go module definition
+├── internal/
+│   ├── api/                # HTTP handlers and routes
+│   ├── auth/               # Authentication logic
+│   ├── config/             # Configuration management
+│   ├── configfiles/        # Config file editing
+│   ├── network/            # Network and firewall management
+│   ├── packages/           # APT package management
+│   ├── services/           # Systemd service control
+│   ├── system/             # System monitoring
+│   ├── users/              # User management
+│   └── util/               # Utilities
+├── cmd/
+│   └── setup/              # Setup wizard
+├── web/                    # Frontend assets (embedded)
+│   ├── index.html
+│   ├── style.css
+│   ├── app.js
+│   └── favicon.svg
+├── install.sh              # Installation script
+├── uninstall.sh            # Uninstallation script
+├── Makefile                # Build automation
+└── README.md
+```
+
+### Running Locally
+
+1. Create a local `config.json`:
+
+```bash
+go run ./cmd/setup
+```
+
+2. Run the server:
+
+```bash
+go run . --config config.json
+```
+
+3. Open http://localhost:3333
+
+### Adding New Features
+
+- **Backend**: Add handlers in `internal/api/`, implement logic in appropriate packages
+- **Frontend**: Edit `web/app.js` and `web/index.html`
+- **Assets**: Run `go build` to re-embed assets
+
+## Troubleshooting
+
+### Port Already in Use
+
+Change the port in `/etc/orbit/config.json` and restart:
+
+```bash
+sudo nano /etc/orbit/config.json
+sudo systemctl restart orbit
+```
+
+### Permission Errors
+
+Ensure Orbit is running as root or the user has passwordless sudo:
+
+```bash
+sudo systemctl edit orbit
+```
+
+Add:
+
+```ini
+[Service]
+User=root
+```
+
+### Can't Access Panel
+
+Check firewall:
+
+```bash
+sudo ufw status
+sudo ufw allow 3333/tcp
+```
+
+Check service status:
+
+```bash
+sudo systemctl status orbit
+sudo journalctl -u orbit -n 50
+```
+
+## Contributing
+
+Contributions are welcome! Please open an issue or pull request on GitHub.
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Credits
+
+Created for simple, efficient server management on Ubuntu/Debian systems.

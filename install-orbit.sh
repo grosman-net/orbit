@@ -69,14 +69,17 @@ systemctl stop "${SERVICE_NAME}.service" >/dev/null 2>&1 || true
 echo
 echo "=== Preparing install directory ${INSTALL_DIR} ==="
 mkdir -p "${INSTALL_DIR}"
+rm -rf "${INSTALL_DIR}/.cache"
 rsync -a --delete \
   --exclude ".git" \
   --exclude ".vscode" \
   --exclude "node_modules" \
   --exclude ".pnpm-store" \
+  --exclude ".cache" \
   "${REPO_ROOT}/" "${INSTALL_DIR}/"
 
 cp "${ENV_FILE}" "${INSTALL_DIR}/.env.production"
+rm -f "${INSTALL_DIR}/.env.local"
 
 pushd "${INSTALL_DIR}" >/dev/null
 echo
@@ -106,7 +109,7 @@ Environment=PORT=${PORT}
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 User=${SERVICE_USER}
 Group=${SERVICE_USER}
-ExecStart=/usr/bin/env pnpm start
+ExecStart=/usr/bin/env node scripts/start.js
 Restart=on-failure
 RestartSec=5
 
@@ -120,12 +123,17 @@ systemctl daemon-reload
 systemctl disable "${SERVICE_NAME}.service" >/dev/null 2>&1 || true
 systemctl enable --now "${SERVICE_NAME}.service"
 
+PRIMARY_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+if [[ -z "${PRIMARY_IP}" ]]; then
+  PRIMARY_IP="127.0.0.1"
+fi
+
 echo
 echo "Orbit installed!"
 echo "Service file: ${SERVICE_PATH}"
 echo "Install dir : ${INSTALL_DIR}"
 echo "Service user: ${SERVICE_USER}"
 echo
-echo "Panel is available at: http://<your-ip>:${PORT}"
+echo "Panel is available at: http://${PRIMARY_IP}:${PORT}"
 echo "Use the administrator credentials configured during setup."
 

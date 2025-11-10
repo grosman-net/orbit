@@ -16,7 +16,9 @@ for (const file of envFiles) {
 const port = normalizePort(process.env.PORT) ?? 3333
 process.env.PORT = String(port)
 
-const child = spawn("next", ["start", "-p", String(port)], {
+const nextBinary = resolveNextBinary()
+
+const child = spawn(process.execPath, [nextBinary, "start", "-p", String(port)], {
   stdio: "inherit",
   env: process.env,
 })
@@ -36,5 +38,14 @@ function normalizePort(value) {
     return null
   }
   return parsed
+}
+
+function resolveNextBinary() {
+  try {
+    return require.resolve("next/dist/bin/next")
+  } catch (error) {
+    console.error("Unable to resolve Next.js binary. Ensure dependencies are installed (pnpm install).")
+    throw error
+  }
 }
 
