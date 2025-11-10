@@ -42,7 +42,7 @@ echo "=== Adding Orbit APT Repository ==="
 echo ""
 
 # Create sources list
-echo "deb [trusted=yes] ${REPO_URL}/apt-repo stable main" > ${SOURCES_FILE}
+echo "deb [trusted=yes] ${REPO_URL} stable main" > ${SOURCES_FILE}
 
 echo "✓ Repository added: ${SOURCES_FILE}"
 echo ""
