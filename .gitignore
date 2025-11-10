@@ -57,3 +57,6 @@ yarn.lock
 
 # Debian package build artifacts
 build-deb/
+
+# APT repository - exclude .deb files
+# apt-repo/pool/main/*.deb
