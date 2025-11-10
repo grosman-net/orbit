@@ -82,3 +82,100 @@ func (h *Handler) handleFirewallDelete(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, map[string]bool{"success": true})
 }
 
+
+// Interface management
+func (h *Handler) handleInterfaceUp(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Interface string `json:"interface"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := network.SetInterfaceUp(req.Interface); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, map[string]bool{"success": true})
+}
+
+func (h *Handler) handleInterfaceDown(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Interface string `json:"interface"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := network.SetInterfaceDown(req.Interface); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, map[string]bool{"success": true})
+}
+
+func (h *Handler) handleInterfaceSetIP(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Interface string `json:"interface"`
+		Address   string `json:"address"`
+		Gateway   string `json:"gateway"`
+		Persistent bool  `json:"persistent"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Add IP address
+	if err := network.AddIPAddress(req.Interface, req.Address); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Save to netplan if persistent
+	if req.Persistent {
+		if err := network.SaveInterfaceConfig(req.Interface, req.Address, req.Gateway); err != nil {
+			h.writeError(w, "Failed to save persistent config: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	h.writeJSON(w, map[string]bool{"success": true})
+}
+
+// Route management
+func (h *Handler) handleRouteAdd(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Destination string `json:"destination"`
+		Gateway     string `json:"gateway"`
+		Interface   string `json:"interface"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := network.AddRoute(req.Destination, req.Gateway, req.Interface); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, map[string]bool{"success": true})
+}
+
+func (h *Handler) handleRouteDelete(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Destination string `json:"destination"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := network.DeleteRoute(req.Destination); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, map[string]bool{"success": true})
+}

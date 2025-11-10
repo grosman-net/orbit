@@ -72,11 +72,19 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const errorDiv = document.getElementById('loginError');
 
     try {
-        await api('/auth/login', {
+        const response = await fetch('/api/auth/login', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password }),
         });
-        await checkSession();
+
+        if (response.ok) {
+            // Reload page to clear state and start fresh
+            window.location.reload();
+        } else {
+            errorDiv.textContent = 'Invalid username or password';
+            errorDiv.style.display = 'block';
+        }
     } catch (error) {
         errorDiv.textContent = 'Invalid username or password';
         errorDiv.style.display = 'block';
@@ -85,9 +93,19 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
     try {
-        await api('/auth/logout', { method: 'POST' });
-    } catch (e) {}
-    showLogin();
+        await fetch('/api/auth/logout', { method: 'POST' });
+        // Clear local state
+        currentUser = null;
+        metricsHistory = [];
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+        // Reload page to clear session
+        window.location.reload();
+    } catch (e) {
+        window.location.reload();
+    }
 });
 
 // Navigation
@@ -154,12 +172,29 @@ document.getElementById('refreshInterval')?.addEventListener('change', (e) => {
 
 // Export data
 document.getElementById('exportData')?.addEventListener('click', () => {
-    const data = JSON.stringify(metricsHistory, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
+    const lines = ['Orbit Server Metrics Export', `Generated: ${new Date().toLocaleString()}`, '=' .repeat(80), ''];
+    
+    metricsHistory.forEach((snapshot, idx) => {
+        lines.push(`[${idx + 1}] ${new Date(snapshot.timestamp).toLocaleString()}`);
+        lines.push(`  Hostname: ${snapshot.hostname}`);
+        lines.push(`  Uptime: ${formatUptime(snapshot.uptime)}`);
+        lines.push(`  CPU Usage: ${snapshot.cpuUsage.toFixed(1)}%`);
+        lines.push(`  Memory Usage: ${snapshot.memUsage.toFixed(1)}% (${formatBytes(snapshot.memUsed)} / ${formatBytes(snapshot.memTotal)})`);
+        lines.push(`  Swap Usage: ${snapshot.swapUsage.toFixed(1)}% (${formatBytes(snapshot.swapUsed)} / ${formatBytes(snapshot.swapTotal)})`);
+        lines.push(`  Disk Usage: ${snapshot.diskUsage.toFixed(1)}% (${formatBytes(snapshot.diskUsed)} / ${formatBytes(snapshot.diskTotal)})`);
+        lines.push(`  Network RX: ${formatBytes(snapshot.networkRxBps)}/s | TX: ${formatBytes(snapshot.networkTxBps)}/s`);
+        lines.push(`  Disk I/O Read: ${formatBytes(snapshot.diskReadBps)}/s | Write: ${formatBytes(snapshot.diskWriteBps)}/s`);
+        lines.push(`  Processes: ${snapshot.processes}`);
+        lines.push(`  Load Average: ${snapshot.loadAverage.map(l => l.toFixed(2)).join(', ')}`);
+        lines.push('');
+    });
+    
+    const data = lines.join('\n');
+    const blob = new Blob([data], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `orbit-metrics-${new Date().toISOString()}.json`;
+    a.download = `orbit-metrics-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
     a.click();
     URL.revokeObjectURL(url);
 });
@@ -532,34 +567,59 @@ async function loadNetwork() {
 }
 
 function displayNetwork(data) {
-    const infoContainer = document.getElementById('networkInfo');
-    const rulesContainer = document.getElementById('firewallRules');
-    
-    infoContainer.innerHTML = `
-        <div class="card">
-            <h3>Firewall Status</h3>
-            <div class="card-value">${data.firewallStatus}</div>
-            <div style="margin-top: 16px; display: flex; gap: 12px;">
+    // Display interfaces
+    const interfacesContainer = document.getElementById('networkInterfaces');
+    interfacesContainer.innerHTML = data.interfaces.map(iface => `
+        <div class="interface-card">
+            <div class="interface-header">
+                <div class="interface-name">
+                    ${iface.name}
+                    <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
+                </div>
+                <div class="interface-controls">
+                    <button class="btn-success" onclick="interfaceUp('${iface.name}')">Up</button>
+                    <button class="btn-danger" onclick="interfaceDown('${iface.name}')">Down</button>
+                </div>
+            </div>
+            <div class="interface-info">
+                <span class="interface-info-label">MAC:</span>
+                <span class="interface-info-value">${iface.mac || 'N/A'}</span>
+                <span class="interface-info-label">Addresses:</span>
+                <span class="interface-info-value">${iface.addresses.join(', ') || 'None'}</span>
+                ${iface.mtu ? `<span class="interface-info-label">MTU:</span><span class="interface-info-value">${iface.mtu}</span>` : ''}
+            </div>
+            <div class="interface-config-form">
+                <div class="form-row">
+                    <label>IP/Mask:</label>
+                    <input type="text" id="ip-${iface.name}" placeholder="10.0.0.10/24" />
+                    <button class="btn-secondary" onclick="setInterfaceIP('${iface.name}', false)">Apply</button>
+                </div>
+                <div class="form-row">
+                    <label>Gateway:</label>
+                    <input type="text" id="gw-${iface.name}" placeholder="10.0.0.1" />
+                    <button class="btn-primary" onclick="setInterfaceIP('${iface.name}', true)">Apply & Save</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    // Display firewall
+    const firewallControl = document.getElementById('firewallControl');
+    firewallControl.innerHTML = `
+        <div class="firewall-status">
+            <div class="firewall-status-text">
+                Firewall: <span class="status status-${data.firewallStatus === 'active' ? 'active' : 'inactive'}">${data.firewallStatus}</span>
+            </div>
+            <div class="firewall-buttons">
                 <button class="btn-success" onclick="firewallAction('enable')">Enable</button>
                 <button class="btn-danger" onclick="firewallAction('disable')">Disable</button>
             </div>
         </div>
-        <div class="card">
-            <h3>Network Interfaces</h3>
-            ${data.interfaces.map(iface => `
-                <div style="margin-bottom: 12px; padding: 12px; background: var(--accent); border-radius: var(--radius);">
-                    <strong>${iface.name}</strong> <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
-                    <div class="card-detail" style="margin-top: 4px;">
-                        ${iface.addresses.join(', ')}
-                    </div>
-                </div>
-            `).join('')}
-        </div>
     `;
 
+    const rulesContainer = document.getElementById('firewallRules');
     rulesContainer.innerHTML = `
-        <h3>Firewall Rules</h3>
-        <div style="margin-bottom: 16px; display: flex; gap: 8px;">
+        <div class="firewall-add">
             <button class="btn-success" onclick="addFirewallRule()">Add Rule</button>
         </div>
         ${data.firewallRules.map((rule, idx) => `
@@ -568,6 +628,48 @@ function displayNetwork(data) {
                 <button class="btn-danger" onclick="deleteFirewallRule('${idx + 1}')">Delete</button>
             </div>
         `).join('')}
+    `;
+
+    // Display routes
+    const routingTable = document.getElementById('routingTable');
+    routingTable.innerHTML = `
+        <div class="route-add-form">
+            <h4>Add Route</h4>
+            <div class="form-row">
+                <label>Destination:</label>
+                <input type="text" id="route-dest" placeholder="0.0.0.0/0 or 10.0.0.0/24" />
+            </div>
+            <div class="form-row">
+                <label>Gateway:</label>
+                <input type="text" id="route-gw" placeholder="10.0.0.1" />
+            </div>
+            <div class="form-row">
+                <label>Interface:</label>
+                <input type="text" id="route-iface" placeholder="eth0" />
+                <button class="btn-primary" onclick="addRoute()">Add Route</button>
+            </div>
+        </div>
+        <div class="route-table">
+            ${data.routes && data.routes.length > 0 ? data.routes.map(route => `
+                <div class="route-item">
+                    <div>
+                        <div class="route-label">Destination</div>
+                        <div class="route-value">${route.destination}</div>
+                    </div>
+                    <div>
+                        <div class="route-label">Gateway</div>
+                        <div class="route-value">${route.gateway || '-'}</div>
+                    </div>
+                    <div>
+                        <div class="route-label">Interface</div>
+                        <div class="route-value">${route.interface || '-'}</div>
+                    </div>
+                    <div class="route-actions">
+                        <button class="btn-danger" onclick="deleteRoute('${route.destination}')">Delete</button>
+                    </div>
+                </div>
+            `).join('') : '<p style="padding: 12px; text-align: center; color: var(--muted-foreground);">No routes configured</p>'}
+        </div>
     `;
 }
 
@@ -607,6 +709,96 @@ window.deleteFirewallRule = async function(ruleNum) {
         alert('Failed to delete rule: ' + error.message);
     }
 };
+
+window.interfaceUp = async function(iface) {
+    try {
+        await api('/network/interface/up', {
+            method: 'POST',
+            body: JSON.stringify({ interface: iface }),
+        });
+        setTimeout(loadNetwork, 500);
+    } catch (error) {
+        alert('Failed to bring interface up: ' + error.message);
+    }
+};
+
+window.interfaceDown = async function(iface) {
+    if (!confirm(`Bring ${iface} down?`)) return;
+    try {
+        await api('/network/interface/down', {
+            method: 'POST',
+            body: JSON.stringify({ interface: iface }),
+        });
+        setTimeout(loadNetwork, 500);
+    } catch (error) {
+        alert('Failed to bring interface down: ' + error.message);
+    }
+};
+
+window.setInterfaceIP = async function(iface, persistent) {
+    const address = document.getElementById(`ip-${iface}`).value.trim();
+    const gateway = document.getElementById(`gw-${iface}`).value.trim();
+    
+    if (!address) {
+        alert('Please enter an IP address with mask (e.g., 10.0.0.10/24)');
+        return;
+    }
+    
+    try {
+        await api('/network/interface/setip', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                interface: iface, 
+                address, 
+                gateway,
+                persistent 
+            }),
+        });
+        alert(persistent ? 'IP address set and saved to netplan' : 'IP address applied');
+        setTimeout(loadNetwork, 500);
+    } catch (error) {
+        alert('Failed to set IP: ' + error.message);
+    }
+};
+
+window.addRoute = async function() {
+    const destination = document.getElementById('route-dest').value.trim();
+    const gateway = document.getElementById('route-gw').value.trim();
+    const iface = document.getElementById('route-iface').value.trim();
+    
+    if (!destination) {
+        alert('Please enter a destination');
+        return;
+    }
+    
+    try {
+        await api('/network/route/add', {
+            method: 'POST',
+            body: JSON.stringify({ destination, gateway, interface: iface }),
+        });
+        document.getElementById('route-dest').value = '';
+        document.getElementById('route-gw').value = '';
+        document.getElementById('route-iface').value = '';
+        loadNetwork();
+    } catch (error) {
+        alert('Failed to add route: ' + error.message);
+    }
+};
+
+window.deleteRoute = async function(destination) {
+    if (!confirm(`Delete route to ${destination}?`)) return;
+    try {
+        await api('/network/route/delete', {
+            method: 'POST',
+            body: JSON.stringify({ destination }),
+        });
+        loadNetwork();
+    } catch (error) {
+        alert('Failed to delete route: ' + error.message);
+    }
+};
+
+document.getElementById('btnRefreshNetwork')?.addEventListener('click', loadNetwork);
 
 // Users
 async function loadUsers() {
@@ -698,20 +890,22 @@ async function loadConfigs() {
 function displayConfigs(configs) {
     const container = document.getElementById('configList');
     container.innerHTML = configs.map(cfg => `
-        <div class="config-item" onclick="loadConfigContent('${cfg.id}')">
+        <div class="config-item" onclick="loadConfigContent('${cfg.id}', this)">
             <h3>${cfg.name}</h3>
             <p>${cfg.description}</p>
         </div>
     `).join('');
 }
 
-window.loadConfigContent = async function(id) {
+window.loadConfigContent = async function(id, element) {
     try {
         const data = await api(`/config/${id}`);
         currentConfig = { id, content: data.content };
         
         document.querySelectorAll('.config-item').forEach(el => el.classList.remove('active'));
-        event.target.closest('.config-item').classList.add('active');
+        if (element) {
+            element.classList.add('active');
+        }
         
         const editor = document.getElementById('configEditor');
         editor.innerHTML = `<textarea id="configTextarea">${data.content}</textarea>`;

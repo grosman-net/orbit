@@ -834,3 +834,224 @@ tr:hover {
         flex-wrap: wrap;
     }
 }
+
+/* Network Grid Layout */
+.network-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
+}
+
+.network-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.5);
+    padding: 24px;
+}
+
+.network-section h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--foreground);
+}
+
+.network-section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--foreground);
+}
+
+/* Interface Cards */
+.interface-card {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.interface-card:hover {
+    border-color: var(--mint);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.interface-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.interface-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+.interface-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.interface-controls button {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.interface-info {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.interface-info-label {
+    font-weight: 600;
+    color: var(--muted-foreground);
+}
+
+.interface-info-value {
+    color: var(--foreground);
+    font-family: 'Courier New', monospace;
+}
+
+.interface-config-form {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.form-row label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+}
+
+.form-row input[type="text"] {
+    padding: 8px 12px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+}
+
+.form-row input:focus {
+    outline: none;
+    border-color: var(--mint);
+}
+
+.form-row button {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* Firewall Control */
+.firewall-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+}
+
+.firewall-status-text {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.firewall-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.firewall-add {
+    margin-bottom: 12px;
+}
+
+/* Route Table */
+.route-table {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.route-item {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr auto;
+    gap: 12px;
+    padding: 12px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    align-items: center;
+    font-size: 13px;
+}
+
+.route-item:last-child {
+    margin-bottom: 0;
+}
+
+.route-label {
+    font-weight: 600;
+    color: var(--muted-foreground);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.route-value {
+    font-family: 'Courier New', monospace;
+    color: var(--foreground);
+}
+
+.route-actions button {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.route-add-form {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.route-add-form h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* Responsive Network */
+@media (max-width: 1200px) {
+    .network-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .route-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}

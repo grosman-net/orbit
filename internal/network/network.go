@@ -11,6 +11,7 @@ type NetworkInfo struct {
 	FirewallStatus string      `json:"firewallStatus"`
 	FirewallRules  []string    `json:"firewallRules"`
 	IPForwarding   bool        `json:"ipForwarding"`
+	Routes         []Route     `json:"routes"`
 }
 
 type Interface struct {
@@ -18,6 +19,15 @@ type Interface struct {
 	Addresses  []string `json:"addresses"`
 	State      string   `json:"state"`
 	MAC        string   `json:"mac"`
+	Gateway    string   `json:"gateway"`
+	MTU        string   `json:"mtu"`
+}
+
+type Route struct {
+	Destination string `json:"destination"`
+	Gateway     string `json:"gateway"`
+	Interface   string `json:"interface"`
+	Metric      string `json:"metric"`
 }
 
 func GetInfo() (*NetworkInfo, error) {
@@ -43,6 +53,12 @@ func GetInfo() (*NetworkInfo, error) {
 
 	// Check IP forwarding
 	info.IPForwarding = isIPForwardingEnabled()
+
+	// Get routes
+	routes, err := getRoutes()
+	if err == nil {
+		info.Routes = routes
+	}
 
 	return info, nil
 }
@@ -190,3 +206,120 @@ func DeleteRule(rule string) error {
 	return err
 }
 
+
+// Get routing table
+func getRoutes() ([]Route, error) {
+	output, err := util.RunCommandNoSudo("ip", "route", "show")
+	if err != nil {
+		return nil, err
+	}
+
+	var routes []Route
+	for _, line := range strings.Split(output, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		parts := strings.Fields(line)
+		if len(parts) < 3 {
+			continue
+		}
+
+		route := Route{
+			Destination: parts[0],
+		}
+
+		for i := 1; i < len(parts); i++ {
+			if parts[i] == "via" && i+1 < len(parts) {
+				route.Gateway = parts[i+1]
+			} else if parts[i] == "dev" && i+1 < len(parts) {
+				route.Interface = parts[i+1]
+			} else if parts[i] == "metric" && i+1 < len(parts) {
+				route.Metric = parts[i+1]
+			}
+		}
+
+		routes = append(routes, route)
+	}
+
+	return routes, nil
+}
+
+// Interface management
+func SetInterfaceUp(name string) error {
+	_, err := util.RunCommand("ip", "link", "set", "dev", name, "up")
+	return err
+}
+
+func SetInterfaceDown(name string) error {
+	_, err := util.RunCommand("ip", "link", "set", "dev", name, "down")
+	return err
+}
+
+func AddIPAddress(iface, address string) error {
+	_, err := util.RunCommand("ip", "addr", "add", address, "dev", iface)
+	return err
+}
+
+func DeleteIPAddress(iface, address string) error {
+	_, err := util.RunCommand("ip", "addr", "del", address, "dev", iface)
+	return err
+}
+
+// Route management
+func AddRoute(destination, gateway, iface string) error {
+	args := []string{"route", "add", destination}
+	if gateway != "" {
+		args = append(args, "via", gateway)
+	}
+	if iface != "" {
+		args = append(args, "dev", iface)
+	}
+	_, err := util.RunCommand("ip", args...)
+	return err
+}
+
+func DeleteRoute(destination string) error {
+	_, err := util.RunCommand("ip", "route", "del", destination)
+	return err
+}
+
+// Persistent network configuration using netplan
+func SaveInterfaceConfig(iface, address, gateway string) error {
+	// This is a simplified version
+	// In production, you'd want to properly parse and modify existing netplan config
+	config := `network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ` + iface + `:
+      addresses:
+        - ` + address + `
+`
+	if gateway != "" {
+		config += `      routes:
+        - to: default
+          via: ` + gateway + `
+`
+	}
+
+	// Write to netplan config
+	_, err := util.RunCommand("sh", "-c", "echo '"+config+"' > /etc/netplan/99-orbit-"+iface+".yaml")
+	if err != nil {
+		return err
+	}
+
+	// Apply netplan
+	_, err = util.RunCommand("netplan", "apply")
+	return err
+}
+
+func DeleteInterfaceConfig(iface string) error {
+	_, err := util.RunCommand("rm", "-f", "/etc/netplan/99-orbit-"+iface+".yaml")
+	if err != nil {
+		return err
+	}
+	_, err = util.RunCommand("netplan", "apply")
+	return err
+}

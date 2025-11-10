@@ -147,12 +147,31 @@
                     <div class="section-header">
                         <div>
                             <h1>Network & Firewall</h1>
-                            <p>Manage network interfaces and firewall rules</p>
+                            <p>Manage network interfaces, routing, and firewall</p>
                         </div>
+                        <button id="btnRefreshNetwork" class="btn-secondary">Refresh</button>
                     </div>
-                    <div class="network-layout">
-                        <div id="networkInfo"></div>
-                        <div id="firewallRules"></div>
+                    
+                    <div class="network-grid">
+                        <!-- Interfaces Section -->
+                        <div class="network-section">
+                            <h2>Network Interfaces</h2>
+                            <div id="networkInterfaces"></div>
+                        </div>
+
+                        <!-- Firewall Section -->
+                        <div class="network-section">
+                            <h2>Firewall</h2>
+                            <div id="firewallControl"></div>
+                            <h3 style="margin-top: 20px;">Firewall Rules</h3>
+                            <div id="firewallRules"></div>
+                        </div>
+
+                        <!-- Routing Section -->
+                        <div class="network-section">
+                            <h2>Routing Table</h2>
+                            <div id="routingTable"></div>
+                        </div>
                     </div>
                 </div>
 
