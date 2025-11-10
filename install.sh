@@ -30,43 +30,84 @@ esac
 
 echo "Detected architecture: $ARCH ($GOARCH)"
 
+# Function to install Go
+install_go() {
+    echo "=== Installing Go 1.23.0 ==="
+    
+    GO_VERSION="1.23.0"
+    GO_TARBALL="go${GO_VERSION}.linux-${GOARCH}.tar.gz"
+    GO_URL="https://go.dev/dl/${GO_TARBALL}"
+    
+    echo "Downloading Go ${GO_VERSION}..."
+    cd /tmp
+    wget -q --show-progress "$GO_URL" || {
+        echo "Error: Failed to download Go"
+        exit 1
+    }
+    
+    echo "Installing Go to /usr/local/go..."
+    rm -rf /usr/local/go
+    tar -C /usr/local -xzf "$GO_TARBALL"
+    rm "$GO_TARBALL"
+    
+    # Add to PATH
+    export PATH=$PATH:/usr/local/go/bin
+    
+    # Add to profile for persistence
+    if ! grep -q "/usr/local/go/bin" /etc/profile; then
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
+    fi
+    
+    if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
+        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+    fi
+    
+    echo "✓ Go $(go version | awk '{print $3}') installed successfully"
+    echo
+}
+
 # Check if binaries already exist in current directory
 if [ -f "./orbit" ] && [ -f "./orbit-setup" ]; then
     echo "Found pre-built binaries in current directory"
 elif command -v go &> /dev/null; then
-    # Go is installed, build from source
+    # Go is installed, check version
     GO_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
-    echo "Go version: $GO_VERSION"
+    echo "Found Go version: $GO_VERSION"
     
     # Check if Go version is sufficient (1.21+)
     GO_MAJOR=$(echo "$GO_VERSION" | cut -d. -f1)
     GO_MINOR=$(echo "$GO_VERSION" | cut -d. -f2)
     
     if [ "$GO_MAJOR" -lt 1 ] || ([ "$GO_MAJOR" -eq 1 ] && [ "$GO_MINOR" -lt 21 ]); then
-        echo "Error: Go 1.21 or later is required (found $GO_VERSION)"
-        echo "Please upgrade Go or use pre-built binaries"
-        echo "See INSTALL.md for instructions"
-        exit 1
+        echo "Go version too old (need 1.21+, found $GO_VERSION)"
+        echo "Upgrading Go..."
+        install_go
     fi
     
     # Build the application
     echo
-    echo "=== Building Orbit ==="
+    echo "=== Building Orbit from source ==="
     go build -o orbit -ldflags="-s -w" .
     go build -o orbit-setup -ldflags="-s -w" ./cmd/setup
 else
-    echo "Error: Neither pre-built binaries found nor Go installed"
+    # Go not installed, install it automatically
+    echo "Go not found, installing automatically..."
     echo
-    echo "Option 1: Download pre-built binaries:"
-    echo "  wget https://github.com/yourusername/orbit/releases/latest/download/orbit-linux-$GOARCH"
-    echo "  wget https://github.com/yourusername/orbit/releases/latest/download/orbit-setup-linux-$GOARCH"
-    echo "  chmod +x orbit-linux-$GOARCH orbit-setup-linux-$GOARCH"
-    echo "  mv orbit-linux-$GOARCH orbit"
-    echo "  mv orbit-setup-linux-$GOARCH orbit-setup"
-    echo
-    echo "Option 2: Install Go 1.21+ and run this script again"
-    echo "  See INSTALL.md for instructions"
-    exit 1
+    
+    # Check for required tools
+    if ! command -v wget &> /dev/null; then
+        echo "Installing wget..."
+        apt-get update -qq
+        apt-get install -y wget
+    fi
+    
+    install_go
+    
+    # Now build
+    echo "=== Building Orbit from source ==="
+    cd "$(dirname "$0")"
+    go build -o orbit -ldflags="-s -w" .
+    go build -o orbit-setup -ldflags="-s -w" ./cmd/setup
 fi
 
 # Install binaries

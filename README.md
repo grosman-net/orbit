@@ -2,7 +2,7 @@
 
 **Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
 ![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
@@ -82,16 +82,18 @@
 git clone https://github.com/grosman-net/orbit.git
 cd orbit
 
-# Run installation script
+# Run installation script (fully automated)
 sudo ./install.sh
 ```
 
-The installer will:
-1. Check Go version (requires 1.21+)
-2. Build the project
-3. Run interactive setup (port, admin credentials)
-4. Install systemd service
-5. Start Orbit automatically
+The installer will **automatically**:
+1. ✅ Install Go 1.23.0 if not present (or upgrade if too old)
+2. ✅ Install wget if needed
+3. ✅ Build the project from source
+4. ✅ Run interactive setup (port, admin credentials)
+5. ✅ Create and start systemd service
+
+**No prerequisites required** - the script handles everything!
 
 ### Manual Setup
 

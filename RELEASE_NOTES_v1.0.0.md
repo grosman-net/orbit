@@ -136,13 +136,13 @@ MIT License - see [LICENSE](LICENSE) file for details.
 **Linux amd64** (Intel/AMD 64-bit):
 ```
 orbit-1.0.0-linux-amd64.tar.gz
-SHA256: b143efcebc2d7b87ca9b1c4f31d11e9fa2f38531fc01fa95e8dc9f0eb34cf851
+SHA256: 258dd14d5bca795ba1dd754770da14842a8696842a67f9275f8131cc135c0073
 ```
 
 **Linux arm64** (ARM 64-bit, e.g., Raspberry Pi 4):
 ```
 orbit-1.0.0-linux-arm64.tar.gz
-SHA256: 5aa3c06b100daec70508e7fda1e4a7372fbb29ef33b01c4952a86c978b1c5bc0
+SHA256: f31f385154511370126c545572fa4c0715fcef8db796f0c9722594ba3cbd8e33
 ```
 
 ---

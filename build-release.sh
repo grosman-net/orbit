@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="1.0.0"
+VERSION="1.0.2"
 DIST_DIR="dist"
 
 echo "Building Orbit v${VERSION} for release..."
@@ -15,13 +15,13 @@ mkdir -p ${DIST_DIR}
 
 # Build for Ubuntu/Debian (amd64)
 echo "Building for linux/amd64..."
-GOOS=linux GOARCH=amd64 go build -o ${DIST_DIR}/orbit-${VERSION}-linux-amd64 -ldflags="-s -w -X main.Version=${VERSION}" .
-GOOS=linux GOARCH=amd64 go build -o ${DIST_DIR}/orbit-setup-${VERSION}-linux-amd64 -ldflags="-s -w" ./cmd/setup
+GOOS=linux GOARCH=amd64 go build -o ${DIST_DIR}/orbit-amd64 -ldflags="-s -w -X main.Version=${VERSION}" .
+GOOS=linux GOARCH=amd64 go build -o ${DIST_DIR}/orbit-setup-amd64 -ldflags="-s -w" ./cmd/setup
 
 # Build for Ubuntu/Debian (arm64)
 echo "Building for linux/arm64..."
-GOOS=linux GOARCH=arm64 go build -o ${DIST_DIR}/orbit-${VERSION}-linux-arm64 -ldflags="-s -w -X main.Version=${VERSION}" .
-GOOS=linux GOARCH=arm64 go build -o ${DIST_DIR}/orbit-setup-${VERSION}-linux-arm64 -ldflags="-s -w" ./cmd/setup
+GOOS=linux GOARCH=arm64 go build -o ${DIST_DIR}/orbit-arm64 -ldflags="-s -w -X main.Version=${VERSION}" .
+GOOS=linux GOARCH=arm64 go build -o ${DIST_DIR}/orbit-setup-arm64 -ldflags="-s -w" ./cmd/setup
 
 # Copy web assets
 echo "Copying web assets..."
@@ -36,31 +36,39 @@ cp README.md ${DIST_DIR}/
 cp LICENSE ${DIST_DIR}/
 cp CHANGELOG.md ${DIST_DIR}/
 
-# Create tarballs
+# Create tarballs with proper directory structure
 echo "Creating release archives..."
 cd ${DIST_DIR}
 
-# amd64 tarball
-tar czf orbit-${VERSION}-linux-amd64.tar.gz \
-    orbit-${VERSION}-linux-amd64 \
-    orbit-setup-${VERSION}-linux-amd64 \
-    web/ \
-    install.sh \
-    uninstall.sh \
-    README.md \
-    LICENSE \
-    CHANGELOG.md
+# Create directory for amd64
+mkdir -p orbit-${VERSION}-linux-amd64
+cp orbit-amd64 orbit-${VERSION}-linux-amd64/orbit
+cp orbit-setup-amd64 orbit-${VERSION}-linux-amd64/orbit-setup
+cp -r web orbit-${VERSION}-linux-amd64/
+cp install.sh uninstall.sh README.md LICENSE CHANGELOG.md orbit-${VERSION}-linux-amd64/
+chmod +x orbit-${VERSION}-linux-amd64/orbit
+chmod +x orbit-${VERSION}-linux-amd64/orbit-setup
+chmod +x orbit-${VERSION}-linux-amd64/install.sh
+chmod +x orbit-${VERSION}-linux-amd64/uninstall.sh
 
-# arm64 tarball
-tar czf orbit-${VERSION}-linux-arm64.tar.gz \
-    orbit-${VERSION}-linux-arm64 \
-    orbit-setup-${VERSION}-linux-arm64 \
-    web/ \
-    install.sh \
-    uninstall.sh \
-    README.md \
-    LICENSE \
-    CHANGELOG.md
+# Create amd64 tarball
+tar czf orbit-${VERSION}-linux-amd64.tar.gz orbit-${VERSION}-linux-amd64/
+rm -rf orbit-${VERSION}-linux-amd64
+
+# Create directory for arm64
+mkdir -p orbit-${VERSION}-linux-arm64
+cp orbit-arm64 orbit-${VERSION}-linux-arm64/orbit
+cp orbit-setup-arm64 orbit-${VERSION}-linux-arm64/orbit-setup
+cp -r web orbit-${VERSION}-linux-arm64/
+cp install.sh uninstall.sh README.md LICENSE CHANGELOG.md orbit-${VERSION}-linux-arm64/
+chmod +x orbit-${VERSION}-linux-arm64/orbit
+chmod +x orbit-${VERSION}-linux-arm64/orbit-setup
+chmod +x orbit-${VERSION}-linux-arm64/install.sh
+chmod +x orbit-${VERSION}-linux-arm64/uninstall.sh
+
+# Create arm64 tarball
+tar czf orbit-${VERSION}-linux-arm64.tar.gz orbit-${VERSION}-linux-arm64/
+rm -rf orbit-${VERSION}-linux-arm64
 
 cd ..
 
