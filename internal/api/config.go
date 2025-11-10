@@ -41,3 +41,40 @@ func (h *Handler) handleConfigWrite(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, map[string]bool{"success": true})
 }
 
+
+// Interactive config editing
+func (h *Handler) handleConfigSchema(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	schema, ok := configfiles.GetSchema(id)
+	if !ok {
+		h.writeError(w, "Schema not available for this config", http.StatusNotFound)
+		return
+	}
+	h.writeJSON(w, schema)
+}
+
+func (h *Handler) handleConfigParse(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	parsed, err := configfiles.ParseConfig(id)
+	if err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, parsed)
+}
+
+func (h *Handler) handleConfigApplyInteractive(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	var req struct {
+		Changes map[string]configfiles.FieldValue `json:"changes"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+	if err := configfiles.ApplyInteractiveChanges(id, req.Changes); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, map[string]bool{"success": true})
+}

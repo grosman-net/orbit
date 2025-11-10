@@ -189,7 +189,13 @@
                             <h1>Configuration Files</h1>
                             <p>Edit system configuration files</p>
                         </div>
-                        <button id="btnSaveConfig" class="btn-primary" style="display:none;">Save Changes</button>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div class="mode-switcher" id="configModeSwitcher" style="display:none;">
+                                <button class="mode-btn active" data-mode="raw">RAW</button>
+                                <button class="mode-btn" data-mode="interactive">INTERACTIVE</button>
+                            </div>
+                            <button id="btnSaveConfig" class="btn-primary" style="display:none;">Save Changes</button>
+                        </div>
                     </div>
                     <div class="config-layout">
                         <div id="configList" class="config-sidebar"></div>

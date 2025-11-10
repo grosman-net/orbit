@@ -62,6 +62,9 @@ func NewHandler(webFS embed.FS, cfg *config.Config) http.Handler {
 	api.HandleFunc("/config", auth.RequireAuth(h.handleConfigList)).Methods("GET")
 	api.HandleFunc("/config/{id}", auth.RequireAuth(h.handleConfigRead)).Methods("GET")
 	api.HandleFunc("/config/{id}", auth.RequireAuth(h.handleConfigWrite)).Methods("POST")
+	api.HandleFunc("/config/{id}/schema", auth.RequireAuth(h.handleConfigSchema)).Methods("GET")
+	api.HandleFunc("/config/{id}/parse", auth.RequireAuth(h.handleConfigParse)).Methods("GET")
+	api.HandleFunc("/config/{id}/interactive", auth.RequireAuth(h.handleConfigApplyInteractive)).Methods("POST")
 
 	// Serve embedded static files
 	webRoot, _ := fs.Sub(webFS, "web")

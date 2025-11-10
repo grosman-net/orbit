@@ -85,43 +85,52 @@ func getInterfacesFallback() ([]Interface, error) {
 	var currentIface *Interface
 
 	for _, line := range strings.Split(output, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
 			continue
 		}
 
-		// New interface
-		if !strings.HasPrefix(line, " ") && strings.Contains(line, ":") {
+		// New interface - starts with number: (e.g., "1: lo: <LOOPBACK,UP>")
+		if len(line) > 0 && line[0] >= '0' && line[0] <= '9' && strings.Contains(line, ":") {
 			if currentIface != nil {
 				ifaces = append(ifaces, *currentIface)
 			}
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
+				// parts[1] is the interface name with trailing ":"
 				name := strings.TrimSuffix(parts[1], ":")
 				state := "DOWN"
-				if strings.Contains(line, "UP") {
+				// Check flags in angle brackets
+				if strings.Contains(line, "UP") && strings.Contains(line, "state UP") || strings.Contains(line, "<") && strings.Contains(strings.Split(line, ">")[0], "UP") {
 					state = "UP"
 				}
+				
+				// Parse MTU
+				mtu := ""
+				for i, part := range parts {
+					if part == "mtu" && i+1 < len(parts) {
+						mtu = parts[i+1]
+					}
+				}
+				
 				currentIface = &Interface{
 					Name:      name,
 					State:     state,
 					Addresses: []string{},
+					MTU:       mtu,
 				}
 			}
-		} else if currentIface != nil {
-			// Parse addresses
-			if strings.HasPrefix(line, "inet ") || strings.HasPrefix(line, "inet6 ") {
-				parts := strings.Fields(line)
-				if len(parts) >= 2 {
-					currentIface.Addresses = append(currentIface.Addresses, parts[1])
-				}
+		} else if currentIface != nil && strings.HasPrefix(trimmed, "link/") {
+			// Parse MAC address
+			parts := strings.Fields(trimmed)
+			if len(parts) >= 2 {
+				currentIface.MAC = parts[1]
 			}
-			// Parse MAC
-			if strings.HasPrefix(line, "link/ether ") {
-				parts := strings.Fields(line)
-				if len(parts) >= 2 {
-					currentIface.MAC = parts[1]
-				}
+		} else if currentIface != nil && (strings.HasPrefix(trimmed, "inet ") || strings.HasPrefix(trimmed, "inet6 ")) {
+			// Parse IP addresses
+			parts := strings.Fields(trimmed)
+			if len(parts) >= 2 {
+				currentIface.Addresses = append(currentIface.Addresses, parts[1])
 			}
 		}
 	}

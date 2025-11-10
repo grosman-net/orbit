@@ -1055,3 +1055,153 @@ tr:hover {
         gap: 8px;
     }
 }
+
+/* Mode Switcher */
+.mode-switcher {
+    display: flex;
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.mode-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--muted-foreground);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+}
+
+.mode-btn:hover {
+    background: var(--background);
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--mint), var(--emerald));
+    color: #000;
+}
+
+/* Interactive Config Form */
+.interactive-config-form {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.config-field-group {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.config-field-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.config-field-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.config-field-desc {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin-bottom: 12px;
+}
+
+.config-field-control {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.config-toggle {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    background: var(--muted);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.config-toggle.active {
+    background: var(--mint);
+}
+
+.config-toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.config-toggle.active .config-toggle-slider {
+    transform: translateX(24px);
+}
+
+.config-field-input {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+}
+
+.config-field-input:focus {
+    outline: none;
+    border-color: var(--mint);
+}
+
+.config-field-select {
+    flex: 1;
+    padding: 8px 12px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.config-field-select:focus {
+    outline: none;
+    border-color: var(--mint);
+}
+
+.config-field-status {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--muted);
+    color: var(--muted-foreground);
+}
+
+.config-field-status.enabled {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--mint);
+}
+
+.config-field-status.disabled {
+    background: var(--muted);
+    color: var(--muted-foreground);
+}

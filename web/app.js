@@ -878,6 +878,10 @@ document.getElementById('btnCreateUser').addEventListener('click', () => {
 });
 
 // Config files
+let configMode = 'raw'; // 'raw' or 'interactive'
+let configSchema = null;
+let configParsed = null;
+
 async function loadConfigs() {
     try {
         const configs = await api('/config');
@@ -899,35 +903,190 @@ function displayConfigs(configs) {
 
 window.loadConfigContent = async function(id, element) {
     try {
+        // Load raw content
         const data = await api(`/config/${id}`);
         currentConfig = { id, content: data.content };
+        
+        // Try to load schema for interactive mode
+        try {
+            configSchema = await api(`/config/${id}/schema`);
+            document.getElementById('configModeSwitcher').style.display = 'flex';
+        } catch (e) {
+            configSchema = null;
+            document.getElementById('configModeSwitcher').style.display = 'none';
+        }
         
         document.querySelectorAll('.config-item').forEach(el => el.classList.remove('active'));
         if (element) {
             element.classList.add('active');
         }
         
-        const editor = document.getElementById('configEditor');
-        editor.innerHTML = `<textarea id="configTextarea">${data.content}</textarea>`;
+        // Display based on current mode
+        if (configMode === 'raw' || !configSchema) {
+            displayRawEditor();
+        } else {
+            await displayInteractiveEditor();
+        }
+        
         document.getElementById('btnSaveConfig').style.display = 'block';
     } catch (error) {
         alert('Failed to load config: ' + error.message);
     }
 };
 
+function displayRawEditor() {
+    const editor = document.getElementById('configEditor');
+    editor.innerHTML = `<textarea id="configTextarea">${currentConfig.content}</textarea>`;
+}
+
+async function displayInteractiveEditor() {
+    try {
+        configParsed = await api(`/config/${currentConfig.id}/parse`);
+        
+        const editor = document.getElementById('configEditor');
+        editor.innerHTML = `
+            <div class="interactive-config-form">
+                ${configParsed.schema.fields.map(field => {
+                    const value = configParsed.values[field.key] || { value: field.default, enabled: false };
+                    return `
+                        <div class="config-field-group" data-key="${field.key}">
+                            <div class="config-field-header">
+                                <div class="config-field-label">${field.label}</div>
+                                <span class="config-field-status ${value.enabled ? 'enabled' : 'disabled'}">
+                                    ${value.enabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                            </div>
+                            <div class="config-field-desc">${field.description}</div>
+                            <div class="config-field-control">
+                                <div class="config-toggle ${value.enabled ? 'active' : ''}" 
+                                     onclick="toggleConfigField('${field.key}')">
+                                    <div class="config-toggle-slider"></div>
+                                </div>
+                                ${renderFieldInput(field, value)}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    } catch (error) {
+        alert('Failed to parse config: ' + error.message);
+        displayRawEditor();
+    }
+}
+
+function renderFieldInput(field, value) {
+    const disabled = !value.enabled ? 'disabled' : '';
+    
+    switch (field.type) {
+        case 'select':
+            return `
+                <select class="config-field-select" data-key="${field.key}" ${disabled}>
+                    ${field.options.map(opt => 
+                        `<option value="${opt}" ${opt === value.value ? 'selected' : ''}>${opt}</option>`
+                    ).join('')}
+                </select>
+            `;
+        case 'number':
+            return `
+                <input type="number" class="config-field-input" data-key="${field.key}" 
+                       value="${value.value}" ${disabled} />
+            `;
+        case 'text':
+        default:
+            return `
+                <input type="text" class="config-field-input" data-key="${field.key}" 
+                       value="${value.value}" ${disabled} />
+            `;
+    }
+}
+
+window.toggleConfigField = function(key) {
+    const group = document.querySelector(`[data-key="${key}"]`);
+    const toggle = group.querySelector('.config-toggle');
+    const input = group.querySelector('.config-field-input, .config-field-select');
+    const status = group.querySelector('.config-field-status');
+    
+    const isEnabled = toggle.classList.contains('active');
+    
+    if (isEnabled) {
+        toggle.classList.remove('active');
+        input.disabled = true;
+        status.classList.remove('enabled');
+        status.classList.add('disabled');
+        status.textContent = 'Disabled';
+    } else {
+        toggle.classList.add('active');
+        input.disabled = false;
+        status.classList.remove('disabled');
+        status.classList.add('enabled');
+        status.textContent = 'Enabled';
+    }
+};
+
+// Mode switcher
+document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const mode = btn.dataset.mode;
+        if (mode === configMode) return;
+        
+        configMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        if (currentConfig && currentConfig.id) {
+            if (mode === 'raw' || !configSchema) {
+                displayRawEditor();
+            } else {
+                await displayInteractiveEditor();
+            }
+        }
+    });
+});
+
 document.getElementById('btnSaveConfig')?.addEventListener('click', async () => {
     if (!currentConfig) return;
     
-    const textarea = document.getElementById('configTextarea');
-    const newContent = textarea.value;
-    
     try {
-        await api(`/config/${currentConfig.id}`, {
-            method: 'POST',
-            body: JSON.stringify({ content: newContent }),
-        });
-        alert('Configuration saved successfully');
-        currentConfig.content = newContent;
+        if (configMode === 'raw' || !configSchema) {
+            // Save raw content
+            const textarea = document.getElementById('configTextarea');
+            const newContent = textarea.value;
+            
+            await api(`/config/${currentConfig.id}`, {
+                method: 'POST',
+                body: JSON.stringify({ content: newContent }),
+            });
+            alert('Configuration saved successfully');
+            currentConfig.content = newContent;
+        } else {
+            // Save interactive changes
+            const changes = {};
+            const groups = document.querySelectorAll('.config-field-group');
+            
+            groups.forEach(group => {
+                const key = group.dataset.key;
+                const toggle = group.querySelector('.config-toggle');
+                const input = group.querySelector('.config-field-input, .config-field-select');
+                
+                changes[key] = {
+                    value: input.value,
+                    enabled: toggle.classList.contains('active')
+                };
+            });
+            
+            await api(`/config/${currentConfig.id}/interactive`, {
+                method: 'POST',
+                body: JSON.stringify({ changes }),
+            });
+            alert('Configuration saved successfully');
+            
+            // Reload to show updated content
+            const activeItem = document.querySelector('.config-item.active');
+            if (activeItem) {
+                loadConfigContent(currentConfig.id, activeItem);
+            }
+        }
     } catch (error) {
         alert('Failed to save config: ' + error.message);
     }
