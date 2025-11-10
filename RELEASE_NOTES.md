@@ -4,6 +4,136 @@ This file contains release notes for all versions of Orbit.
 
 ---
 
+## v1.0.6 - Debian Package Support (2025-11-10)
+
+**Type**: Minor Release (Feature)  
+**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Architecture**: amd64, arm64
+
+### 🎉 Major Feature: Debian Package (.deb) Support
+
+Orbit can now be installed as a native Debian package!
+
+### ✨ What's New
+
+#### 📦 .deb Package Installation
+
+```bash
+# Download
+wget https://github.com/grosman-net/orbit/releases/download/v1.0.6/orbit_1.0.6_amd64.deb
+
+# Install
+sudo dpkg -i orbit_1.0.6_amd64.deb
+
+# Configure
+sudo orbit-setup
+
+# Start
+sudo systemctl enable orbit
+sudo systemctl start orbit
+```
+
+#### 🎯 Features
+
+- **Native Package Manager Integration**: Use standard Debian tools
+- **Automatic Dependency Handling**: systemd automatically required
+- **Clean Uninstall**:
+  - `sudo dpkg -r orbit` - removes package, keeps config
+  - `sudo dpkg -P orbit` - complete removal including config
+- **Systemd Integration**: Service unit installed automatically
+- **Maintainer Scripts**: Proper pre/post install/remove hooks
+
+#### 📊 Package Information
+
+| Architecture | Size | Checksum (SHA256) |
+|-------------|------|-------------------|
+| **amd64** | 2.3M | `a897369f936a52e3cea7f63e6b334efd47ee2a54d5137a29762058acdd4a9680` |
+| **arm64** | 2.0M | `65f1eebdb40d7cfe19dca84e8271c281ae6d7d6baf16c57207848305b3beb982` |
+
+### 🔧 Technical Details
+
+**Package Contents**:
+- `/usr/local/bin/orbit` - main binary
+- `/usr/local/bin/orbit-setup` - configuration utility
+- `/lib/systemd/system/orbit.service` - systemd unit
+- `/usr/share/doc/orbit/` - documentation, changelog, copyright
+
+**Maintainer Scripts**:
+- `postinst` - runs post-installation setup, enables service if config exists
+- `prerm` - stops and disables service before removal
+- `postrm` - cleans up config on purge
+
+### 📥 Installation Methods
+
+#### Option 1: .deb Package (Recommended)
+
+```bash
+wget https://github.com/grosman-net/orbit/releases/download/v1.0.6/orbit_1.0.6_amd64.deb
+sudo dpkg -i orbit_1.0.6_amd64.deb
+sudo orbit-setup
+sudo systemctl enable orbit
+sudo systemctl start orbit
+```
+
+#### Option 2: From Source
+
+```bash
+git clone https://github.com/grosman-net/orbit.git
+cd orbit
+sudo ./install.sh
+```
+
+#### Option 3: Pre-built Tarball
+
+```bash
+wget https://github.com/grosman-net/orbit/releases/download/v1.0.6/orbit-1.0.6-linux-amd64.tar.gz
+tar xzf orbit-1.0.6-linux-amd64.tar.gz
+cd orbit-1.0.6-linux-amd64
+sudo ./install.sh
+```
+
+### 🔄 Upgrade from v1.0.5
+
+**If installed from source**:
+```bash
+cd /path/to/orbit
+git pull origin main
+sudo ./install.sh
+```
+
+**New .deb installation**:
+```bash
+# Remove old installation
+sudo systemctl stop orbit
+sudo rm /usr/local/bin/orbit /usr/local/bin/orbit-setup
+
+# Install .deb
+wget https://github.com/grosman-net/orbit/releases/download/v1.0.6/orbit_1.0.6_amd64.deb
+sudo dpkg -i orbit_1.0.6_amd64.deb
+
+# Your existing config will be preserved!
+sudo systemctl enable orbit
+sudo systemctl start orbit
+```
+
+### 🚀 Future Plans
+
+This .deb package is the foundation for:
+- **APT Repository**: Coming soon - `apt install orbit`
+- **Automatic Updates**: Through APT
+- **PPA Support**: For easier distribution
+
+### 📋 All Checksums
+
+```
+orbit-1.0.6-linux-amd64.tar.gz: 23078688d2083430391b42019177e63be2d0256f114d3c667aae59115d617747
+orbit-1.0.6-linux-arm64.tar.gz: e13ccb505aaaa6dee6a35ca44944de05bad08d513d99c2ca6baa15aea40847c1
+orbit_1.0.6_amd64.deb: a897369f936a52e3cea7f63e6b334efd47ee2a54d5137a29762058acdd4a9680
+orbit_1.0.6_arm64.deb: 65f1eebdb40d7cfe19dca84e8271c281ae6d7d6baf16c57207848305b3beb982
+```
+
+---
+
 ## v1.0.5 - Installation Upgrade Fix (2025-11-10)
 
 **Type**: Patch Release (Bugfix)  

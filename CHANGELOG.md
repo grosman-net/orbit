@@ -5,6 +5,37 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2025-11-10
+
+### Added
+- **Debian Package Support** (.deb)
+  - Complete Debian package structure with maintainer scripts
+  - `build-deb.sh` script for building .deb packages (amd64, arm64)
+  - Package includes systemd unit, binaries, and documentation
+  - Automatic setup via `orbit-setup` after installation
+  - Config preservation on `dpkg -r`, cleanup on `dpkg -P`
+
+### Changed
+- **Installation Methods**
+  - Added .deb package installation (recommended method)
+  - Updated `build-release.sh` to include .deb packages
+  - Updated README.md with .deb installation instructions
+  - Version badge updated to 1.0.6
+
+### Files Added
+- `debian/DEBIAN/control` - package metadata
+- `debian/DEBIAN/postinst` - post-installation script
+- `debian/DEBIAN/prerm` - pre-removal script  
+- `debian/DEBIAN/postrm` - post-removal script
+- `debian/lib/systemd/system/orbit.service` - systemd unit
+- `build-deb.sh` - .deb build script
+
+### Package Details
+- Size: amd64 ~2.3M, arm64 ~2.0M
+- Install: `sudo dpkg -i orbit_1.0.6_amd64.deb`
+- Remove: `sudo dpkg -r orbit` (keeps config)
+- Purge: `sudo dpkg -P orbit` (removes config)
+
 ## [1.0.5] - 2025-11-10
 
 ### Fixed
