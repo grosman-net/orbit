@@ -5,6 +5,50 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-11-10
+
+### Added
+- **First Login Password Change** (Security Enhancement)
+  - Added `first_login` flag to `Config` struct in `config.json`
+  - Added `GET /api/auth/first-login` - Check first login status
+  - Added `POST /api/auth/change-password` - Change user password
+  - Added password change modal UI with validation
+  - Automatic password = username on first setup (e.g., `admin:admin`)
+  - Mandatory password change on first login (cannot be skipped)
+  - Clear instructions for users (Grafana-style flow)
+
+### Fixed
+- **Bug #1** (main.go): Port flag now defaults to 0, only overrides config if explicitly set (> 0)
+- **Bug #2** (main.go): Removed Default() config fallback; now exits with error if config.json missing
+- **Bug #3** (util.go): Fixed GenerateRandomString entropy - was generating half the requested randomness
+- **Bug #4** (install.sh): Removed hardcoded `--port 3333` from systemd unit ExecStart
+- **Bug #5** (cmd/setup): Removed TrimSpace from password input to prevent whitespace mismatch issues
+
+### Changed
+- **Setup Process**: Password now defaults to username
+  - `orbit-setup` no longer prompts for password
+  - Default credentials: `username:username` (e.g., `admin:admin`)
+  - Users must change password on first web login
+- **Installation Output**: Enhanced final message with clear credential display
+
+### Security
+- ✅ Removed hardcoded IP addresses from documentation (GO_REWRITE_SUMMARY.md)
+- ✅ Verified `config.json` is properly gitignored
+- ✅ Added `.gitignore` entry for config files
+
+### Files Modified
+- `internal/config/config.go` - Added FirstLogin field and Save() function
+- `internal/api/password.go` - New file with password change handlers
+- `internal/api/handler.go` - Registered new password change routes
+- `cmd/setup/main.go` - Simplified setup (password = username, auto IP detection)
+- `main.go` - Fixed port override logic and config loading
+- `internal/util/util.go` - Fixed random string generation
+- `install.sh` - Fixed systemd unit port configuration, improved output
+- `web/index.html` - Added password change modal
+- `web/style.css` - Added modal styling
+- `web/app.js` - Added password change logic and first login check
+- `GO_REWRITE_SUMMARY.md` - Removed hardcoded IP addresses
+
 ## [1.0.3] - 2025-11-10
 
 ### Fixed

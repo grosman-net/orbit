@@ -10,9 +10,9 @@ import (
 
 // GenerateRandomString generates a random hex string of given length
 func GenerateRandomString(length int) string {
-	bytes := make([]byte, length/2)
+	bytes := make([]byte, length)
 	rand.Read(bytes)
-	return hex.EncodeToString(bytes)
+	return hex.EncodeToString(bytes)[:length]
 }
 
 // DetectPrimaryIP attempts to detect the primary non-loopback IP address

@@ -20,20 +20,18 @@ var webFS embed.FS
 
 func main() {
 	// Parse command-line flags
-	port := flag.Int("port", 3333, "HTTP port to listen on")
+	port := flag.Int("port", 0, "HTTP port to listen on (overrides config)")
 	configPath := flag.String("config", "/etc/orbit/config.json", "Path to configuration file")
 	flag.Parse()
 
 	// Load configuration
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		log.Printf("Warning: Could not load config from %s: %v", *configPath, err)
-		log.Printf("Using defaults. Run 'orbit setup' to configure.")
-		cfg = config.Default()
+		log.Fatalf("ERROR: Could not load config from %s: %v\nRun 'orbit-setup' to create configuration.", *configPath, err)
 	}
 
-	// Override port if specified
-	if *port != 3333 {
+	// Override port if specified via flag
+	if *port > 0 {
 		cfg.Port = *port
 	}
 

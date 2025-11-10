@@ -161,7 +161,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/orbit --config /etc/orbit/config.json --port $PORT
+ExecStart=/usr/local/bin/orbit --config /etc/orbit/config.json
 Restart=on-failure
 RestartSec=5s
 StandardOutput=journal
@@ -177,17 +177,34 @@ systemctl enable orbit.service
 systemctl restart orbit.service
 
 echo
-echo "=== Installation Complete ==="
-echo
-echo "Service: orbit.service"
-echo "Status: systemctl status orbit"
-echo "Logs: journalctl -u orbit -f"
+echo "╔═══════════════════════════════════════════════════════════╗"
+echo "║                                                           ║"
+echo "║   ✅ ORBIT INSTALLATION COMPLETE!                        ║"
+echo "║                                                           ║"
+echo "╚═══════════════════════════════════════════════════════════╝"
 echo
 
-# Detect primary IP
-PRIMARY_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -Po 'src \K[\d.]+' || echo "localhost")
+# Get configured values from config.json
+if [ -f /etc/orbit/config.json ]; then
+    CONFIGURED_USERNAME=$(grep -Po '"admin_username":\s*"\K[^"]+' /etc/orbit/config.json || echo "admin")
+    CONFIGURED_PORT=$(grep -Po '"port":\s*\K\d+' /etc/orbit/config.json || echo "$PORT")
+    PRIMARY_IP=$(grep -Po '"public_url":\s*"http://\K[^:]+' /etc/orbit/config.json || ip route get 1.1.1.1 2>/dev/null | grep -Po 'src \K[\d.]+' || echo "localhost")
+    
+    echo "═══════════════════════════════════════════════════════════"
+    echo "  🌐 Panel URL: http://$PRIMARY_IP:$CONFIGURED_PORT"
+    echo "  👤 Username:  $CONFIGURED_USERNAME"
+    echo "  🔐 Password:  $CONFIGURED_USERNAME (change after first login)"
+    echo "═══════════════════════════════════════════════════════════"
+else
+    PRIMARY_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -Po 'src \K[\d.]+' || echo "localhost")
+    echo "Panel URL: http://$PRIMARY_IP:$PORT"
+fi
 
-echo "Panel URL: http://$PRIMARY_IP:$PORT"
 echo
-echo "Use the credentials configured during setup to log in."
+echo "Service management:"
+echo "  • Status: systemctl status orbit"
+echo "  • Logs:   journalctl -u orbit -f"
+echo "  • Stop:   systemctl stop orbit"
+echo "  • Start:  systemctl start orbit"
+echo
 

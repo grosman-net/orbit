@@ -142,7 +142,7 @@ All configuration is in `/etc/orbit/config.json`:
   "admin_username": "admin",
   "admin_password_hash": "$2a$12$...",
   "session_secret": "...",
-  "public_url": "http://185.105.118.251:3333"
+  "public_url": "http://YOUR_SERVER_IP:3333"
 }
 ```
 
@@ -222,12 +222,12 @@ If you have the old version installed:
 
 ## Testing
 
-On your test server (185.105.118.251):
+On your test server (YOUR_SERVER_IP):
 
 1. Build or download binary
 2. Run setup: `sudo orbit-setup`
 3. Start service: `sudo systemctl start orbit`
-4. Access: http://185.105.118.251:3333
+4. Access: http://YOUR_SERVER_IP:3333
 5. Login with your configured credentials
 
 ## Notes

@@ -56,8 +56,20 @@ function showLogin() {
     }
 }
 
-function showApp() {
+async function showApp() {
     document.getElementById('loginScreen').style.display = 'none';
+    
+    // Check if this is first login
+    try {
+        const data = await api('/auth/first-login');
+        if (data.first_login) {
+            showPasswordChangeModal(true);
+            return;
+        }
+    } catch (e) {
+        console.error('Failed to check first login:', e);
+    }
+    
     document.getElementById('mainApp').style.display = 'flex';
     document.getElementById('currentUser').textContent = currentUser.username;
     initCharts();
@@ -1147,3 +1159,74 @@ function debounce(func, wait) {
 
 // Initialize
 checkSession();
+
+// Password change functionality
+function showPasswordChangeModal(isForced = false) {
+    const modal = document.getElementById('changePasswordModal');
+    const cancelBtn = document.getElementById('cancelPasswordChange');
+    const subtitle = document.getElementById('modalSubtitle');
+    
+    if (isForced) {
+        subtitle.textContent = 'You must change your password on first login';
+        cancelBtn.style.display = 'none';
+    } else {
+        subtitle.textContent = 'Choose a new password for your account';
+        cancelBtn.style.display = 'block';
+    }
+    
+    modal.style.display = 'block';
+}
+
+function hidePasswordChangeModal() {
+    document.getElementById('changePasswordModal').style.display = 'none';
+    document.getElementById('changePasswordForm').reset();
+    document.getElementById('passwordError').style.display = 'none';
+}
+
+document.getElementById('cancelPasswordChange').addEventListener('click', () => {
+    hidePasswordChangeModal();
+});
+
+document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const errorDiv = document.getElementById('passwordError');
+    
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+        errorDiv.textContent = 'New passwords do not match';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Validate password length
+    if (newPassword.length < 4) {
+        errorDiv.textContent = 'Password must be at least 4 characters';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    try {
+        await api('/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+        });
+        
+        hidePasswordChangeModal();
+        
+        // Show app if it was first login
+        document.getElementById('mainApp').style.display = 'flex';
+        document.getElementById('currentUser').textContent = currentUser.username;
+        initCharts();
+        loadMonitoring();
+        startAutoRefresh();
+        
+        // Show success message
+        alert('Password changed successfully!');
+    } catch (error) {
+        errorDiv.textContent = error.message || 'Failed to change password';
+        errorDiv.style.display = 'block';
+    }
+});

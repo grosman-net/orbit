@@ -27,6 +27,8 @@ func NewHandler(webFS embed.FS, cfg *config.Config) http.Handler {
 	h.router.HandleFunc("/api/auth/login", h.handleLogin).Methods("POST")
 	h.router.HandleFunc("/api/auth/logout", h.handleLogout).Methods("POST")
 	h.router.HandleFunc("/api/auth/session", h.handleSession).Methods("GET")
+	h.router.HandleFunc("/api/auth/first-login", auth.RequireAuth(h.handleCheckFirstLogin)).Methods("GET")
+	h.router.HandleFunc("/api/auth/change-password", auth.RequireAuth(h.handleChangePassword)).Methods("POST")
 
 	// API endpoints (protected)
 	api := h.router.PathPrefix("/api").Subrouter()

@@ -7,10 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/crypto/ssh/terminal"
 
 	"orbit/internal/config"
 	"orbit/internal/util"
@@ -24,18 +22,12 @@ func main() {
 	// Port
 	cfg.Port = promptInt("HTTP port", 3333)
 
-	// Admin username
-	cfg.AdminUsername = promptString("Admin username", "admin")
+	// Admin username with automatic password
+	cfg.AdminUsername = promptStringOrDefault("Admin username (password will be same as username)", "admin")
+	password := cfg.AdminUsername // Username = Password by default
 
-	// Admin password
-	fmt.Println("\nSet administrator password:")
-	password := promptPassword("Enter password")
-	confirmPassword := promptPassword("Confirm password")
-
-	if password != confirmPassword {
-		fmt.Println("Passwords do not match!")
-		os.Exit(1)
-	}
+	fmt.Printf("✓ Username: %s (default password: %s)\n", cfg.AdminUsername, cfg.AdminUsername)
+	fmt.Println("  You can change the password after first login via web panel")
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -47,10 +39,12 @@ func main() {
 	// Session secret
 	cfg.SessionSecret = util.GenerateRandomString(64)
 
-	// Detect IP
+	// Detect IP automatically
 	detectedIP := util.DetectPrimaryIP()
-	defaultURL := fmt.Sprintf("http://%s:%d", detectedIP, cfg.Port)
-	cfg.PublicURL = promptString("Public URL for the panel", defaultURL)
+	cfg.PublicURL = fmt.Sprintf("http://%s:%d", detectedIP, cfg.Port)
+	
+	// Set first login flag
+	cfg.FirstLogin = true
 
 	// Ensure config directory exists
 	configDir := "/etc/orbit"
@@ -73,13 +67,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n✓ Configuration saved to: %s\n", configPath)
-	fmt.Printf("  Port: %d\n", cfg.Port)
-	fmt.Printf("  Admin: %s\n", cfg.AdminUsername)
-	fmt.Printf("  URL: %s\n", cfg.PublicURL)
+	fmt.Printf("\n✅ Configuration saved!\n\n")
+	fmt.Printf("═══════════════════════════════════════════\n")
+	fmt.Printf("  Panel URL: %s\n", cfg.PublicURL)
+	fmt.Printf("  Username:  %s\n", cfg.AdminUsername)
+	fmt.Printf("  Password:  %s (change after first login)\n", cfg.AdminUsername)
+	fmt.Printf("═══════════════════════════════════════════\n")
 }
 
-func promptString(prompt, defaultValue string) string {
+func promptStringOrDefault(prompt, defaultValue string) string {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("%s [%s]: ", prompt, defaultValue)
 	input, _ := reader.ReadString('\n')
@@ -105,24 +101,6 @@ func promptInt(prompt string, defaultValue int) int {
 			continue
 		}
 		return val
-	}
-}
-
-func promptPassword(prompt string) string {
-	for {
-		fmt.Printf("%s: ", prompt)
-		password, err := terminal.ReadPassword(int(syscall.Stdin))
-		fmt.Println() // newline after hidden input
-		if err != nil {
-			fmt.Printf("Error reading password: %v\n", err)
-			continue
-		}
-		pwd := strings.TrimSpace(string(password))
-		if pwd == "" {
-			fmt.Println("Password cannot be empty. Please try again.")
-			continue
-		}
-		return pwd
 	}
 }
 

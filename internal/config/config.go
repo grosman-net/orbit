@@ -11,6 +11,7 @@ type Config struct {
 	AdminPasswordHash string `json:"admin_password_hash"`
 	SessionSecret     string `json:"session_secret"`
 	PublicURL         string `json:"public_url"`
+	FirstLogin        bool   `json:"first_login"`
 }
 
 func Load(path string) (*Config, error) {
@@ -34,6 +35,15 @@ func Default() *Config {
 		AdminPasswordHash: "",
 		SessionSecret:     "",
 		PublicURL:         "http://localhost:3333",
+		FirstLogin:        false,
 	}
+}
+
+func Save(cfg *Config, path string) error {
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0600)
 }
 
