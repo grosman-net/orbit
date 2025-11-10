@@ -48,7 +48,7 @@ func GetInfo() (*NetworkInfo, error) {
 }
 
 func getInterfaces() ([]Interface, error) {
-	output, err := util.RunCommandNoSudo("ip", "-j", "addr", "show")
+	_, err := util.RunCommandNoSudo("ip", "-j", "addr", "show")
 	if err != nil {
 		// Fallback to non-JSON format
 		return getInterfacesFallback()
@@ -124,9 +124,9 @@ func getFirewallStatus() (string, error) {
 	}
 
 	if strings.Contains(output, "Status: active") {
-		return "active"
+		return "active", nil
 	} else if strings.Contains(output, "Status: inactive") {
-		return "inactive"
+		return "inactive", nil
 	}
 	return "unknown", nil
 }

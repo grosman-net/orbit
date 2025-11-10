@@ -1,169 +1,142 @@
 # Orbit
 
-**Orbit** is a lightweight server management panel for Ubuntu/Debian systems. It provides a modern web interface to monitor system resources, manage packages, control services, configure firewall rules, and more.
+Lightweight server management panel for Ubuntu/Debian. Single binary, no dependencies, full control.
 
 ## Features
 
-- 🖥️ **System Monitoring**: Real-time CPU, memory, disk, network, and process statistics
-- 📦 **Package Management**: Install, remove, and search APT packages
-- ⚙️ **Service Control**: Start, stop, restart, and manage systemd services
-- 🌐 **Network Management**: View interfaces and control UFW firewall
-- 👥 **User Management**: Create, lock, unlock, and delete system users
-- 📝 **Configuration Editor**: Edit system config files (Nginx, SSH, etc.)
-- 📋 **Log Viewer**: View systemd service logs
-- 🔒 **Secure Authentication**: Password-protected web interface
+- 📊 **Real-time Monitoring**: CPU, RAM, disk, network, swap, I/O, load average
+- 📦 **Package Management**: Install, remove, update APT packages
+- ⚙️ **Service Control**: Manage systemd services
+- 🌐 **Network**: UFW firewall, interface monitoring
+- 👥 **User Management**: Create, lock, unlock, delete users
+- 📝 **Config Editor**: Edit system config files (Nginx, SSH, etc.)
+- 📋 **Logs**: View systemd service logs
+- 🔒 **Secure**: Password-protected with bcrypt, session-based auth
 
-## Architecture
+## Quick Install
 
-Orbit is built with **Go** and compiles into a single static binary with embedded frontend assets. This design eliminates runtime dependencies and simplifies deployment.
-
-- **Backend**: Go 1.23+ with Gorilla Mux for routing
-- **Frontend**: Vanilla JavaScript with modern CSS
-- **Embedded Assets**: All HTML/CSS/JS bundled into the binary
-- **Authentication**: Session-based with bcrypt password hashing
-
-## Requirements
-
-- **OS**: Ubuntu 20.04+ or Debian 11+ (Linux x86_64, ARM64, or ARM)
-- **Go**: 1.23 or later (only needed for building from source)
-- **Privileges**: Root access required for system management operations
-
-## Quick Start
-
-### Installation
-
-1. Clone the repository:
+### Download Pre-built Binary
 
 ```bash
-git clone https://github.com/yourusername/orbit.git
-cd orbit
+# For x86_64 (most common)
+wget https://github.com/yourusername/orbit/releases/latest/download/orbit-linux-amd64
+wget https://github.com/yourusername/orbit/releases/latest/download/orbit-setup-linux-amd64
+
+chmod +x orbit-linux-amd64 orbit-setup-linux-amd64
+sudo mv orbit-linux-amd64 /usr/local/bin/orbit
+sudo mv orbit-setup-linux-amd64 /usr/local/bin/orbit-setup
+
+# For ARM64
+# wget https://github.com/yourusername/orbit/releases/latest/download/orbit-linux-arm64
+# wget https://github.com/yourusername/orbit/releases/latest/download/orbit-setup-linux-arm64
 ```
 
-2. Run the installation script:
+### Configure
 
 ```bash
-sudo ./install.sh
+sudo mkdir -p /etc/orbit
+sudo orbit-setup
 ```
 
-The installer will:
-- Build the Orbit binary
-- Install it to `/usr/local/bin`
-- Run the setup wizard to configure credentials and port
-- Create and start a systemd service
+### Create Service
 
-3. Access the panel:
+```bash
+sudo tee /etc/systemd/system/orbit.service <<'EOF'
+[Unit]
+Description=Orbit Server Management Panel
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/orbit --config /etc/orbit/config.json
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable orbit
+sudo systemctl start orbit
+```
+
+### Access
 
 ```
 http://<your-server-ip>:3333
 ```
 
-Use the credentials you configured during setup to log in.
+Login with credentials from setup.
 
-### Configuration
+## Build from Source
 
-The setup wizard (`orbit-setup`) will prompt you for:
-
-- **HTTP Port**: Port to listen on (default: 3333)
-- **Admin Username**: Username for authentication (default: admin)
-- **Admin Password**: Password (securely hashed with bcrypt)
-- **Public URL**: Base URL for the panel
-
-Configuration is stored in `/etc/orbit/config.json`.
-
-To reconfigure:
+**Requires Go 1.21+**
 
 ```bash
-sudo orbit-setup
-sudo systemctl restart orbit
+git clone https://github.com/yourusername/orbit.git
+cd orbit
+git checkout go-rewrite
+sudo ./install.sh
 ```
 
-### Uninstallation
-
-```bash
-sudo ./uninstall.sh
-```
-
-This will:
-- Stop and disable the orbit.service
-- Remove binaries from `/usr/local/bin`
-- Optionally remove `/etc/orbit/config.json`
-
-## Manual Build
-
-If you want to build manually:
-
-```bash
-# Build main binary
-go build -o orbit -ldflags="-s -w" .
-
-# Build setup tool
-go build -o orbit-setup -ldflags="-s -w" ./cmd/setup
-
-# Run setup
-sudo ./orbit-setup
-
-# Run Orbit
-sudo ./orbit --config /etc/orbit/config.json
-```
-
-## Makefile Targets
-
-- `make build`: Build the binaries
-- `make install`: Install Orbit (requires sudo)
-- `make uninstall`: Uninstall Orbit (requires sudo)
-- `make run`: Build and run locally with `config.json`
-- `make dev`: Run in development mode
-- `make setup`: Run the setup wizard
-- `make build-all`: Cross-compile for amd64, arm64, and arm
+The install script handles everything automatically.
 
 ## Usage
 
-### Managing the Service
+### Service Management
 
 ```bash
-# Start
-sudo systemctl start orbit
+sudo systemctl status orbit   # Check status
+sudo systemctl restart orbit  # Restart
+sudo systemctl stop orbit     # Stop
+sudo journalctl -u orbit -f   # View logs
+```
 
-# Stop
-sudo systemctl stop orbit
+### Configuration
 
-# Restart
-sudo systemctl restart orbit
+Edit `/etc/orbit/config.json` or run `sudo orbit-setup` again.
 
-# Status
-sudo systemctl status orbit
-
-# Logs
-sudo journalctl -u orbit -f
+```json
+{
+  "port": 3333,
+  "admin_username": "admin",
+  "admin_password_hash": "$2a$12$...",
+  "session_secret": "...",
+  "public_url": "http://185.105.118.251:3333"
+}
 ```
 
 ### Command-Line Options
 
 ```bash
 orbit --help
+orbit --port 8080
+orbit --config /path/to/config.json
 ```
 
-- `--port`: HTTP port (default: 3333)
-- `--config`: Path to config file (default: /etc/orbit/config.json)
-
-### Sudo Requirements
-
-Orbit requires passwordless sudo access for system management commands. During installation, the service runs as root by default.
-
-If running as a non-root user, ensure the user has `NOPASSWD` sudo access:
+### Uninstall
 
 ```bash
-echo "orbit ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/orbit
+sudo systemctl stop orbit
+sudo systemctl disable orbit
+sudo rm /etc/systemd/system/orbit.service
+sudo rm /usr/local/bin/orbit /usr/local/bin/orbit-setup
+sudo rm -rf /etc/orbit  # Optional: remove config
+sudo systemctl daemon-reload
 ```
 
-## Security Considerations
+## Security
 
-- **Run over HTTPS**: Use a reverse proxy (Nginx, Caddy) with SSL/TLS for production
-- **Firewall**: Restrict access to the Orbit port using UFW or iptables
-- **Strong Passwords**: Use strong, unique passwords for the admin account
-- **Updates**: Keep your system and Orbit up to date
+**Important**: Orbit runs with root privileges to manage system services. Always use it securely:
 
-Example Nginx reverse proxy config:
+1. **Use HTTPS**: Put Orbit behind a reverse proxy with SSL/TLS
+2. **Firewall**: Restrict access to trusted IPs only
+3. **Strong Passwords**: Use complex, unique passwords
+4. **Keep Updated**: Update Orbit and your system regularly
+
+### Example Nginx Reverse Proxy
 
 ```nginx
 server {
@@ -185,72 +158,47 @@ server {
 
 ## Development
 
+```bash
+# Build
+make build
+
+# Run locally
+make run
+
+# Build for all architectures
+make build-all
+```
+
 ### Project Structure
 
 ```
 orbit/
-├── main.go                 # Application entry point
-├── go.mod                  # Go module definition
+├── main.go                    # Entry point
 ├── internal/
-│   ├── api/                # HTTP handlers and routes
-│   ├── auth/               # Authentication logic
-│   ├── config/             # Configuration management
-│   ├── configfiles/        # Config file editing
-│   ├── network/            # Network and firewall management
-│   ├── packages/           # APT package management
-│   ├── services/           # Systemd service control
-│   ├── system/             # System monitoring
-│   ├── users/              # User management
-│   └── util/               # Utilities
-├── cmd/
-│   └── setup/              # Setup wizard
-├── web/                    # Frontend assets (embedded)
-│   ├── index.html
-│   ├── style.css
-│   ├── app.js
-│   └── favicon.svg
-├── install.sh              # Installation script
-├── uninstall.sh            # Uninstallation script
-├── Makefile                # Build automation
-└── README.md
+│   ├── api/                   # HTTP handlers
+│   ├── auth/                  # Authentication
+│   ├── system/                # Monitoring
+│   ├── packages/              # APT management
+│   ├── services/              # Systemd control
+│   ├── network/               # Network & firewall
+│   ├── users/                 # User management
+│   └── util/                  # Utilities
+├── cmd/setup/                 # Setup wizard
+└── web/                       # Frontend (embedded)
 ```
-
-### Running Locally
-
-1. Create a local `config.json`:
-
-```bash
-go run ./cmd/setup
-```
-
-2. Run the server:
-
-```bash
-go run . --config config.json
-```
-
-3. Open http://localhost:3333
-
-### Adding New Features
-
-- **Backend**: Add handlers in `internal/api/`, implement logic in appropriate packages
-- **Frontend**: Edit `web/app.js` and `web/index.html`
-- **Assets**: Run `go build` to re-embed assets
 
 ## Troubleshooting
 
 ### Port Already in Use
 
-Change the port in `/etc/orbit/config.json` and restart:
-
 ```bash
-sudo nano /etc/orbit/config.json
+sudo nano /etc/orbit/config.json  # Change port
 sudo systemctl restart orbit
 ```
 
 ### Permission Errors
 
-Ensure Orbit is running as root or the user has passwordless sudo:
+Ensure Orbit runs as root:
 
 ```bash
 sudo systemctl edit orbit
@@ -268,25 +216,42 @@ User=root
 Check firewall:
 
 ```bash
-sudo ufw status
 sudo ufw allow 3333/tcp
+sudo ufw status
 ```
 
-Check service status:
+Check service:
 
 ```bash
 sudo systemctl status orbit
 sudo journalctl -u orbit -n 50
 ```
 
+## Architecture
+
+- **Backend**: Go 1.21+ with Gorilla Mux
+- **Frontend**: Vanilla JavaScript, embedded at compile time
+- **Size**: ~15 MB single binary
+- **Dependencies**: None at runtime
+
+## Why Go Rewrite?
+
+Previously Node.js/Next.js (~500 MB), now Go (~15 MB):
+
+- ✅ 33x smaller
+- ✅ Zero runtime dependencies
+- ✅ Simpler installation
+- ✅ Better performance
+- ✅ Native system integration
+
 ## Contributing
 
-Contributions are welcome! Please open an issue or pull request on GitHub.
+Contributions welcome! Open an issue or pull request.
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - See LICENSE file
 
 ## Credits
 
-Created for simple, efficient server management on Ubuntu/Debian systems.
+Created for simple, efficient Ubuntu/Debian server management.
