@@ -1,0 +1,29 @@
+Package: orbit
+Version: 1.0.8
+Architecture: amd64
+Maintainer: grosman-net <https://github.com/grosman-net>
+Installed-Size: 8416
+Depends: systemd
+Provides: orbitctl
+Filename: pool/main/orbit_1.0.8_amd64.deb
+Size: 2350248
+MD5sum: 800069a0a4857e532cf42ad796fd5e03
+SHA1: 55806c9d18babdec1703e9a8e2eef91ee4d57cee
+SHA256: 4a94d3a3acf7e5921d6ce9034fdcd350b05237baf63de5f5852e21de5c3618f6
+Section: admin
+Priority: optional
+Homepage: https://github.com/grosman-net/orbit
+Description: Modern server management panel for Ubuntu/Debian
+ Orbit is a lightweight, modern server management panel built with Go.
+ It provides a web-based interface for managing Ubuntu/Debian servers.
+ .
+ Features:
+  - Real-time system monitoring with charts
+  - Package management (APT)
+  - Service control (systemd)
+  - Network configuration with persistence
+  - User management
+  - Interactive config editor
+  - System logs viewer
+  - Secure authentication
+
