@@ -2,7 +2,7 @@
 
 **Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
-![Version](https://img.shields.io/badge/version-1.0.6-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
 ![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
@@ -77,24 +77,43 @@
 
 ### Installation
 
-#### Option 1: Using .deb Package (Recommended)
+#### Option 1: APT Repository (Recommended) ⭐
+
+**One-line install:**
+```bash
+curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash
+```
+
+**Or manually:**
+```bash
+# Add repository
+echo 'deb [trusted=yes] https://grosman-net.github.io/orbit stable main' | \
+  sudo tee /etc/apt/sources.list.d/orbitctl.list
+
+# Install
+sudo apt update
+sudo apt install orbitctl
+```
+
+During installation, you'll be prompted for:
+- HTTP port (default: 3333)
+- Admin username (default: admin)
+
+The service starts automatically! 🎉
+
+#### Option 2: Using .deb Package
 
 ```bash
 # Download the latest release
-wget https://github.com/grosman-net/orbit/releases/download/v1.0.6/orbit_1.0.6_amd64.deb
+wget https://github.com/grosman-net/orbit/releases/download/v1.1.0/orbit_1.1.0_amd64.deb
 
 # Install
-sudo dpkg -i orbit_1.0.6_amd64.deb
+sudo dpkg -i orbit_1.1.0_amd64.deb
 
-# Configure
-sudo orbit-setup
-
-# Enable and start
-sudo systemctl enable orbit
-sudo systemctl start orbit
+# The service will start automatically after prompting for configuration
 ```
 
-#### Option 2: From Source
+#### Option 3: From Source
 
 ```bash
 # Clone the repository

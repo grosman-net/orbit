@@ -1,15 +1,15 @@
 Package: orbit
-Version: 1.0.8
+Version: 1.1.0
 Architecture: arm64
 Maintainer: grosman-net <https://github.com/grosman-net>
 Installed-Size: 8096
 Depends: systemd
 Provides: orbitctl
-Filename: pool/main/orbit_1.0.8_arm64.deb
-Size: 2036344
-MD5sum: bb970203ad226f83c29e05b186889f93
-SHA1: a891bab468d72ce2bf7e7e3cb77fa81a43e5fc03
-SHA256: a2668bb28868ee0adc60403af373306ecd2a09f80ede70e515bd8b818a282d17
+Filename: pool/main/orbit_1.1.0_arm64.deb
+Size: 2038780
+MD5sum: 081cc6a148498ee201c717f05865db59
+SHA1: 3c5fb3505e46b39d82ff715ed455a461b44f4fde
+SHA256: e4f01ed9951655a9a6e9abd3ff1740522dbd627d691c5e36e5e8901a1c18f07f
 Section: admin
 Priority: optional
 Homepage: https://github.com/grosman-net/orbit

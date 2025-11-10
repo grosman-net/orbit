@@ -58,5 +58,11 @@ yarn.lock
 # Debian package build artifacts
 build-deb/
 
-# APT repository - exclude .deb files
-# apt-repo/pool/main/*.deb
+# APT repository (generated, tracked separately on gh-pages)
+apt-repo/
+
+# Temporary documentation files
+GITHUB_AUTOMATION.sh
+GO_REWRITE_SUMMARY.md
+PR_DESCRIPTION.md
+RELEASE_CHECKLIST.md

@@ -5,6 +5,58 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-11-10
+
+### Added
+- **APT Repository Support**
+  - Full APT repository hosted on GitHub Pages
+  - One-line installation: `curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash`
+  - Install via `apt install orbitctl` (package name: `orbit`, provides: `orbitctl`)
+  - Automatic updates via `apt upgrade`
+  - Support for amd64 and arm64 architectures
+
+- **Interactive Package Installation**
+  - `postinst` script automatically runs `orbit-setup` on first install
+  - Prompts for HTTP port (default: 3333)
+  - Prompts for admin username (default: admin)
+  - Automatically enables and starts systemd service
+  - Shows access URL and credentials after installation
+
+- **Repository Infrastructure**
+  - `build-apt-repo.sh` - generates APT repository structure
+  - `install-orbitctl.sh` - one-line installer script
+  - Proper `Release` file with MD5Sum and SHA256 checksums
+  - GitHub Pages deployment at https://grosman-net.github.io/orbit
+
+### Fixed
+- **APT Repository Format**
+  - Fixed `Release` file format to include file sizes (required by APT)
+  - Proper format: `<hash> <size> <path>` for MD5Sum/SHA256 entries
+  - Resolved "Unable to parse package file" error
+  - Fixed "Conflicting distribution" warning
+
+### Changed
+- **Package Naming**
+  - Main package name: `orbit`
+  - Provides alias: `orbitctl` (both work with apt install)
+  - Simplified installation and discovery
+
+- **Documentation**
+  - Updated README.md with APT installation instructions
+  - Cleaned up temporary documentation files
+  - Updated installation methods to prioritize APT
+
+### Technical Details
+- APT repository structure: `dists/stable/main/binary-{amd64,arm64}/`
+- Package pool: `pool/main/`
+- Debian control file includes `Provides: orbitctl`
+- GitHub Actions workflow for automated builds
+- Release file includes proper checksums with file sizes
+
+### Removed
+- Temporary documentation files (GITHUB_AUTOMATION.sh, GO_REWRITE_SUMMARY.md, etc.)
+- Obsolete build artifacts
+
 ## [1.0.6] - 2025-11-10
 
 ### Added
