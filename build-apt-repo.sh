@@ -47,12 +47,22 @@ Description: Orbit Server Management Panel APT Repository
 Date: $(date -R -u)
 EOF
 
-# Add file hashes to Release
+# Add file hashes to Release (with sizes)
 echo "MD5Sum:" >> dists/${DIST}/Release
-find dists/${DIST} -type f -name "Packages*" -exec md5sum {} \; | sed "s|dists/${DIST}/| |" >> dists/${DIST}/Release
+find dists/${DIST} -type f -name "Packages*" | while read file; do
+    md5=$(md5sum "$file" | awk '{print $1}')
+    size=$(stat -c%s "$file")
+    path=$(echo "$file" | sed "s|dists/${DIST}/||")
+    printf " %s %16s %s\n" "$md5" "$size" "$path"
+done >> dists/${DIST}/Release
 
 echo "SHA256:" >> dists/${DIST}/Release
-find dists/${DIST} -type f -name "Packages*" -exec sha256sum {} \; | sed "s|dists/${DIST}/| |" >> dists/${DIST}/Release
+find dists/${DIST} -type f -name "Packages*" | while read file; do
+    sha256=$(sha256sum "$file" | awk '{print $1}')
+    size=$(stat -c%s "$file")
+    path=$(echo "$file" | sed "s|dists/${DIST}/||")
+    printf " %s %16s %s\n" "$sha256" "$size" "$path"
+done >> dists/${DIST}/Release
 
 cd ..
 
