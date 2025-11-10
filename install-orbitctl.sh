@@ -54,8 +54,8 @@ apt-get update -qq
 echo "✓ Package lists updated"
 echo ""
 
-# Install orbitctl
-echo "=== Installing orbitctl ==="
+# Install orbit (provides orbitctl)
+echo "=== Installing Orbit ==="
 apt-get install -y orbitctl
 
 echo ""
