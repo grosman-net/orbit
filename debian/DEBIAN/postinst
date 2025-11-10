@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+# Create config directory
+mkdir -p /etc/orbit
+chmod 755 /etc/orbit
+
+# Run setup if config doesn't exist
+if [ ! -f /etc/orbit/config.json ]; then
+    echo ""
+    echo "═══════════════════════════════════════════════════════"
+    echo "  Orbit has been installed!"
+    echo "═══════════════════════════════════════════════════════"
+    echo ""
+    echo "Before starting the service, you need to configure Orbit:"
+    echo ""
+    echo "  sudo orbit-setup"
+    echo ""
+    echo "Then enable and start the service:"
+    echo ""
+    echo "  sudo systemctl enable orbit"
+    echo "  sudo systemctl start orbit"
+    echo ""
+    echo "═══════════════════════════════════════════════════════"
+else
+    # Config exists, reload and restart service
+    systemctl daemon-reload
+    
+    # Check if service was running before upgrade
+    if systemctl is-active --quiet orbit 2>/dev/null; then
+        echo "Restarting Orbit service..."
+        systemctl restart orbit
+    fi
+fi
+
+exit 0
+

@@ -73,13 +73,24 @@ rm -rf orbit-${VERSION}-linux-arm64
 cd ..
 
 echo "Build complete!"
-echo "Release artifacts:"
+echo "Release artifacts (tarballs):"
 ls -lh ${DIST_DIR}/*.tar.gz
 
+# Build .deb packages
+echo ""
+echo "Building .deb packages..."
+./build-deb.sh ${VERSION} amd64
+./build-deb.sh ${VERSION} arm64
+
+echo ""
+echo "All release artifacts:"
+ls -lh ${DIST_DIR}/
+
 # Generate checksums
+echo ""
 echo "Generating checksums..."
 cd ${DIST_DIR}
-sha256sum *.tar.gz > SHA256SUMS
+sha256sum *.tar.gz *.deb > SHA256SUMS
 cd ..
 
 echo ""

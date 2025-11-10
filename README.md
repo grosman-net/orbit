@@ -77,6 +77,25 @@
 
 ### Installation
 
+#### Option 1: Using .deb Package (Recommended)
+
+```bash
+# Download the latest release
+wget https://github.com/grosman-net/orbit/releases/download/v1.0.5/orbit_1.0.5_amd64.deb
+
+# Install
+sudo dpkg -i orbit_1.0.5_amd64.deb
+
+# Configure
+sudo orbit-setup
+
+# Enable and start
+sudo systemctl enable orbit
+sudo systemctl start orbit
+```
+
+#### Option 2: From Source
+
 ```bash
 # Clone the repository
 git clone https://github.com/grosman-net/orbit.git
@@ -117,6 +136,25 @@ http://your-server-ip:3333
 ```
 
 Default credentials are set during installation.
+
+### Uninstall
+
+#### If installed via .deb package:
+
+```bash
+# Remove package (keeps configuration)
+sudo dpkg -r orbit
+
+# Or completely remove including configuration
+sudo dpkg -P orbit
+```
+
+#### If installed from source:
+
+```bash
+cd /path/to/orbit
+sudo ./uninstall.sh
+```
 
 ---
 

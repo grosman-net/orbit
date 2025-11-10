@@ -54,3 +54,6 @@ yarn.lock
 .env.production
 .env.*.local
 
+
+# Debian package build artifacts
+build-deb/
