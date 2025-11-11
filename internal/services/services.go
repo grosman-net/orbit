@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"strings"
 
 	"orbit/internal/util"
@@ -40,41 +41,88 @@ func List() ([]Service, error) {
 }
 
 func Start(unit string) error {
+	// Validate unit name to prevent injection
+	if !isValidUnitName(unit) {
+		return fmt.Errorf("invalid unit name: %s", unit)
+	}
 	_, err := util.RunCommand("systemctl", "start", unit)
 	return err
 }
 
 func Stop(unit string) error {
+	// Validate unit name to prevent injection
+	if !isValidUnitName(unit) {
+		return fmt.Errorf("invalid unit name: %s", unit)
+	}
 	_, err := util.RunCommand("systemctl", "stop", unit)
 	return err
 }
 
 func Restart(unit string) error {
+	// Validate unit name to prevent injection
+	if !isValidUnitName(unit) {
+		return fmt.Errorf("invalid unit name: %s", unit)
+	}
 	_, err := util.RunCommand("systemctl", "restart", unit)
 	return err
 }
 
 func Enable(unit string) error {
+	// Validate unit name to prevent injection
+	if !isValidUnitName(unit) {
+		return fmt.Errorf("invalid unit name: %s", unit)
+	}
 	_, err := util.RunCommand("systemctl", "enable", unit)
 	return err
 }
 
 func Disable(unit string) error {
+	// Validate unit name to prevent injection
+	if !isValidUnitName(unit) {
+		return fmt.Errorf("invalid unit name: %s", unit)
+	}
 	_, err := util.RunCommand("systemctl", "disable", unit)
 	return err
 }
 
 func GetStatus(unit string) (string, error) {
+	// Validate unit name to prevent injection
+	if !isValidUnitName(unit) {
+		return "", fmt.Errorf("invalid unit name: %s", unit)
+	}
 	output, err := util.RunCommand("systemctl", "status", unit)
 	return output, err
 }
 
 func GetLogs(unit string, lines int) (string, error) {
+	// Validate unit name to prevent injection
+	if !isValidUnitName(unit) {
+		return "", fmt.Errorf("invalid unit name: %s", unit)
+	}
+	
+	// BUG FIX: Proper int to string conversion
 	linesStr := "50"
 	if lines > 0 {
-		linesStr = string(rune(lines))
+		linesStr = fmt.Sprintf("%d", lines)
 	}
 	output, err := util.RunCommand("journalctl", "-u", unit, "-n", linesStr, "--no-pager")
 	return output, err
+}
+
+// isValidUnitName validates systemd unit names to prevent command injection
+func isValidUnitName(unit string) bool {
+	if unit == "" || len(unit) > 256 {
+		return false
+	}
+	// Allow alphanumeric, dash, underscore, dot, @, colon
+	// Typical systemd unit: service.name, service@instance.service
+	for _, c := range unit {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || 
+			(c >= '0' && c <= '9') || c == '-' || c == '_' || 
+			c == '.' || c == '@' || c == ':') {
+			return false
+		}
+	}
+	return true
 }
 

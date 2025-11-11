@@ -13,6 +13,13 @@ type loginRequest struct {
 }
 
 func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	// Check rate limit before processing login
+	clientIP := auth.GetClientIP(r)
+	if !auth.CheckRateLimit(clientIP) {
+		h.writeError(w, "Too many login attempts. Please try again later.", http.StatusTooManyRequests)
+		return
+	}
+	
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.writeError(w, "Invalid request", http.StatusBadRequest)
@@ -23,6 +30,9 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		h.writeError(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
+
+	// Reset rate limit on successful login
+	auth.ResetRateLimit(clientIP)
 
 	if err := auth.SetUser(r, w, req.Username); err != nil {
 		h.writeError(w, "Session error", http.StatusInternalServerError)

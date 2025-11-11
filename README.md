@@ -2,7 +2,7 @@
 
 **Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
 ![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
@@ -105,10 +105,10 @@ The service starts automatically! 🎉
 
 ```bash
 # Download the latest release
-wget https://github.com/grosman-net/orbit/releases/download/v1.1.0/orbit_1.1.0_amd64.deb
+wget https://github.com/grosman-net/orbit/releases/download/v1.1.1/orbit_1.1.1_amd64.deb
 
 # Install
-sudo dpkg -i orbit_1.1.0_amd64.deb
+sudo dpkg -i orbit_1.1.1_amd64.deb
 
 # The service will start automatically after prompting for configuration
 ```

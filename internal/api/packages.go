@@ -67,7 +67,11 @@ func (h *Handler) handlePackagesUpdate(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Upgrade bool `json:"upgrade"`
 	}
-	json.NewDecoder(r.Body).Decode(&req)
+	// BUG FIX: Check error from Decode
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
 
 	if req.Upgrade {
 		if err := packages.Upgrade(); err != nil {

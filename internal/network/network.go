@@ -197,22 +197,40 @@ func DisableFirewall() error {
 }
 
 func AllowPort(port, protocol string) error {
+	// Validate port and protocol to prevent injection
+	if !isValidPort(port) {
+		return fmt.Errorf("invalid port: %s", port)
+	}
 	if protocol == "" {
 		protocol = "tcp"
+	}
+	if !isValidProtocol(protocol) {
+		return fmt.Errorf("invalid protocol: %s", protocol)
 	}
 	_, err := util.RunCommand("ufw", "allow", port+"/"+protocol)
 	return err
 }
 
 func DenyPort(port, protocol string) error {
+	// Validate port and protocol to prevent injection
+	if !isValidPort(port) {
+		return fmt.Errorf("invalid port: %s", port)
+	}
 	if protocol == "" {
 		protocol = "tcp"
+	}
+	if !isValidProtocol(protocol) {
+		return fmt.Errorf("invalid protocol: %s", protocol)
 	}
 	_, err := util.RunCommand("ufw", "deny", port+"/"+protocol)
 	return err
 }
 
 func DeleteRule(rule string) error {
+	// Validate rule number to prevent injection
+	if !isValidRuleNumber(rule) {
+		return fmt.Errorf("invalid rule number: %s", rule)
+	}
 	_, err := util.RunCommand("ufw", "delete", rule)
 	return err
 }
@@ -259,27 +277,60 @@ func getRoutes() ([]Route, error) {
 
 // Interface management
 func SetInterfaceUp(name string) error {
+	// Validate interface name to prevent injection
+	if !isValidInterfaceName(name) {
+		return fmt.Errorf("invalid interface name: %s", name)
+	}
 	_, err := util.RunCommand("ip", "link", "set", "dev", name, "up")
 	return err
 }
 
 func SetInterfaceDown(name string) error {
+	// Validate interface name to prevent injection
+	if !isValidInterfaceName(name) {
+		return fmt.Errorf("invalid interface name: %s", name)
+	}
 	_, err := util.RunCommand("ip", "link", "set", "dev", name, "down")
 	return err
 }
 
 func AddIPAddress(iface, address string) error {
+	// Validate inputs to prevent injection
+	if !isValidInterfaceName(iface) {
+		return fmt.Errorf("invalid interface name: %s", iface)
+	}
+	if !isValidIPAddress(address) {
+		return fmt.Errorf("invalid IP address: %s", address)
+	}
 	_, err := util.RunCommand("ip", "addr", "add", address, "dev", iface)
 	return err
 }
 
 func DeleteIPAddress(iface, address string) error {
+	// Validate inputs to prevent injection
+	if !isValidInterfaceName(iface) {
+		return fmt.Errorf("invalid interface name: %s", iface)
+	}
+	if !isValidIPAddress(address) {
+		return fmt.Errorf("invalid IP address: %s", address)
+	}
 	_, err := util.RunCommand("ip", "addr", "del", address, "dev", iface)
 	return err
 }
 
 // Route management
 func AddRoute(destination, gateway, iface string) error {
+	// Validate inputs to prevent injection
+	if !isValidIPAddress(destination) {
+		return fmt.Errorf("invalid destination: %s", destination)
+	}
+	if gateway != "" && !isValidIP(gateway) {
+		return fmt.Errorf("invalid gateway: %s", gateway)
+	}
+	if iface != "" && !isValidInterfaceName(iface) {
+		return fmt.Errorf("invalid interface: %s", iface)
+	}
+	
 	args := []string{"route", "add", destination}
 	if gateway != "" {
 		args = append(args, "via", gateway)
@@ -292,15 +343,25 @@ func AddRoute(destination, gateway, iface string) error {
 }
 
 func DeleteRoute(destination string) error {
+	// Validate destination to prevent injection
+	if !isValidIPAddress(destination) {
+		return fmt.Errorf("invalid destination: %s", destination)
+	}
 	_, err := util.RunCommand("ip", "route", "del", destination)
 	return err
 }
 
 // Persistent network configuration using netplan
 func SaveInterfaceConfig(iface, address, gateway string) error {
-	// Validate input to prevent injection
-	if strings.ContainsAny(iface, "'\"\n\r;&|`$()") {
-		return fmt.Errorf("invalid interface name")
+	// Validate all inputs to prevent injection
+	if !isValidInterfaceName(iface) {
+		return fmt.Errorf("invalid interface name: %s", iface)
+	}
+	if !isValidIPAddress(address) {
+		return fmt.Errorf("invalid IP address: %s", address)
+	}
+	if gateway != "" && !isValidIP(gateway) {
+		return fmt.Errorf("invalid gateway: %s", gateway)
 	}
 	
 	config := `network:
@@ -330,10 +391,93 @@ func SaveInterfaceConfig(iface, address, gateway string) error {
 }
 
 func DeleteInterfaceConfig(iface string) error {
-	_, err := util.RunCommand("rm", "-f", "/etc/netplan/99-orbit-"+iface+".yaml")
-	if err != nil {
+	// Validate interface name to prevent injection
+	if !isValidInterfaceName(iface) {
+		return fmt.Errorf("invalid interface name: %s", iface)
+	}
+	
+	// Use os.Remove instead of shell command for better security
+	filePath := "/etc/netplan/99-orbit-" + iface + ".yaml"
+	if err := os.Remove(filePath); err != nil && !os.IsNotExist(err) {
 		return err
 	}
-	_, err = util.RunCommand("netplan", "apply")
+	
+	_, err := util.RunCommand("netplan", "apply")
 	return err
+}
+
+// Validation functions to prevent command injection
+
+func isValidInterfaceName(name string) bool {
+	if name == "" || len(name) > 16 {
+		return false
+	}
+	// Allow alphanumeric, underscore, colon, period, dash
+	for _, c := range name {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || 
+			(c >= '0' && c <= '9') || c == '_' || c == ':' || c == '.' || c == '-') {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidPort(port string) bool {
+	if port == "" {
+		return false
+	}
+	// Port can be a number or a range (e.g., "80" or "8000:9000")
+	for _, c := range port {
+		if !((c >= '0' && c <= '9') || c == ':') {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidProtocol(protocol string) bool {
+	// Only allow tcp, udp, or any
+	return protocol == "tcp" || protocol == "udp" || protocol == "any"
+}
+
+func isValidRuleNumber(rule string) bool {
+	if rule == "" {
+		return false
+	}
+	// Rule number must be numeric only
+	for _, c := range rule {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidIPAddress(addr string) bool {
+	if addr == "" {
+		return false
+	}
+	// Allow IP address with optional CIDR notation
+	// Format: xxx.xxx.xxx.xxx or xxx.xxx.xxx.xxx/xx
+	for _, c := range addr {
+		if !((c >= '0' && c <= '9') || c == '.' || c == '/' || c == ':') {
+			return false
+		}
+	}
+	return true
+}
+
+func isValidIP(ip string) bool {
+	if ip == "" {
+		return false
+	}
+	// Allow IP address without CIDR notation
+	// Format: xxx.xxx.xxx.xxx or IPv6
+	for _, c := range ip {
+		if !((c >= '0' && c <= '9') || c == '.' || c == ':' || 
+			(c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
 }

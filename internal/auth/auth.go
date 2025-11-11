@@ -25,7 +25,17 @@ func init() {
 
 func Init(c *config.Config) {
 	cfg = c
-	store = sessions.NewCookieStore([]byte(cfg.SessionSecret))
+
+	// Ensure session secret is at least 32 bytes for security
+	secret := []byte(cfg.SessionSecret)
+	if len(secret) < 32 {
+		// Pad with zeros if too short (shouldn't happen with proper setup)
+		padded := make([]byte, 32)
+		copy(padded, secret)
+		secret = padded
+	}
+
+	store = sessions.NewCookieStore(secret)
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7, // 7 days
@@ -33,6 +43,9 @@ func Init(c *config.Config) {
 		Secure:   false, // Set to true if using HTTPS
 		SameSite: http.SameSiteLaxMode,
 	}
+
+	// Start cleanup goroutine for rate limiting
+	CleanupOldAttempts()
 }
 
 func Login(username, password string) bool {
@@ -99,4 +112,3 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
-

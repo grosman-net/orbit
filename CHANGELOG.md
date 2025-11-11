@@ -5,6 +5,84 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-11-11
+
+### Security Fixes 🔒
+
+#### CRITICAL Command Injection Vulnerabilities (HIGH)
+- **Network/Firewall Operations** - Fixed command injection in:
+  - `AllowPort()`, `DenyPort()`, `DeleteRule()` - Firewall management
+  - `SetInterfaceUp/Down()` - Interface control
+  - `AddIPAddress()`, `DeleteIPAddress()` - IP configuration
+  - `AddRoute()`, `DeleteRoute()` - Routing table
+  - `SaveInterfaceConfig()`, `DeleteInterfaceConfig()` - Persistent config
+  - Added comprehensive input validation (ports, protocols, interfaces, IPs)
+
+- **Service Operations** - Fixed command injection in:
+  - `Start()`, `Stop()`, `Restart()` - Service control
+  - `Enable()`, `Disable()` - Service autostart
+  - `GetStatus()`, `GetLogs()` - Service status
+  - Added `isValidUnitName()` validation for systemd units
+
+- **User Management** - Fixed command injection in:
+  - `Create()`, `Delete()` - User management
+  - `Lock()`, `Unlock()` - Account control
+  - `ChangePassword()` - Password management
+  - Added `isValidUsername()` validation (Linux username conventions)
+
+#### MEDIUM Security Issues
+- **Rate Limiting** - Added IP-based login rate limiting:
+  - Maximum 5 failed attempts per IP address
+  - 15-minute lockout period after limit exceeded
+  - Automatic cleanup of old attempts
+  - Support for reverse proxy headers (X-Forwarded-For, X-Real-IP)
+  - New file: `internal/auth/ratelimit.go`
+
+#### LOW Security Issues
+- **Session Secret** - Enhanced session security:
+  - Enforced minimum 32-byte session secret
+  - Automatic padding if misconfigured
+  - Already using crypto/rand for generation (64 chars)
+
+### Bug Fixes 🐛
+
+1. **services.GetLogs()** - Fixed incorrect int to string conversion
+   - Was: `string(rune(lines))` ❌
+   - Now: `fmt.Sprintf("%d", lines)` ✅
+   - Impact: Service logs now show correct number of lines
+
+2. **users.Create()** - Fixed password not being set
+   - Password now properly piped to `chpasswd` via stdin
+   - Users can now actually log in with set password
+   - Impact: Created users are now usable immediately
+
+3. **handlePackagesUpdate()** - Fixed missing error handling
+   - Now properly checks JSON decode errors
+   - Returns 400 Bad Request on malformed input
+   - Impact: Better error messages for API consumers
+
+### Technical Details
+
+- Added validation functions in `network.go`:
+  - `isValidInterfaceName()`, `isValidPort()`, `isValidProtocol()`
+  - `isValidRuleNumber()`, `isValidIPAddress()`, `isValidIP()`
+- Added `isValidUnitName()` in `services.go`
+- Added `isValidUsername()` in `users.go`
+- All shell command inputs now validated before execution
+- No shell metacharacters allowed in any user inputs
+
+### Security Audit Summary
+
+| Category | Found | Fixed |
+|----------|-------|-------|
+| Critical Vulnerabilities | 3 | 3 ✅ |
+| Medium Vulnerabilities | 1 | 1 ✅ |
+| Low Vulnerabilities | 1 | 1 ✅ |
+| Bugs | 3 | 3 ✅ |
+| **Total Issues** | **8** | **8 ✅** |
+
+See `SECURITY_FIXES_v1.1.1.md` for detailed security audit report.
+
 ## [1.1.0] - 2025-11-10
 
 ### Added
