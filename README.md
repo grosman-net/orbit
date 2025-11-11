@@ -64,12 +64,14 @@
 - Real-time log viewing
 
 ### 🔐 Security
-- **Bcrypt password hashing**
+- **Bcrypt password hashing** (DefaultCost = 10)
 - **Session-based authentication** with HTTP-only cookies
-- **Input validation** on all user inputs
-- **Shell injection protection**
-- **Package name validation**
-- **Netplan config validation**
+- **Rate limiting** on login (5 attempts / 15 minutes)
+- **Command injection protection** - comprehensive input validation
+- **Shell metacharacter filtering** on all system commands
+- **Validated inputs**: usernames, service names, network interfaces, ports, IPs
+- **Strong session secrets** (64 bytes, crypto/rand)
+- **Password security** - piped via stdin, never in command line
 
 ---
 
@@ -158,6 +160,16 @@ Default credentials are set during installation.
 
 ### Uninstall
 
+#### If installed via APT:
+
+```bash
+# Remove package (keeps configuration)
+sudo apt remove orbitctl
+
+# Or completely remove including configuration
+sudo apt purge orbitctl
+```
+
 #### If installed via .deb package:
 
 ```bash
@@ -238,33 +250,28 @@ sudo ./uninstall.sh
 ## 🛠️ Configuration
 
 ### Config File
-Location: `/orbit/config.json` or `/etc/orbit/config.json`
+Location: `/etc/orbit/config.json`
 
 ```json
 {
   "port": 3333,
-  "adminUsername": "admin",
-  "adminPasswordHash": "$2a$12$...",
-  "sessionSecret": "random-secret",
-  "publicURL": "http://your-server:3333"
+  "admin_username": "admin",
+  "admin_password_hash": "$2a$10$...",
+  "session_secret": "random-64-char-hex-string",
+  "public_url": "http://your-server:3333",
+  "first_login": false
 }
 ```
 
-### Changing Port
+### Changing Port or Password
 ```bash
 sudo systemctl stop orbit
-sudo ./orbit-setup
-# Enter new port
+sudo orbit-setup
+# Enter new settings
 sudo systemctl start orbit
 ```
 
-### Resetting Admin Password
-```bash
-sudo systemctl stop orbit
-sudo ./orbit-setup
-# Choose new password
-sudo systemctl start orbit
-```
+**Note:** Password is automatically set to match username during setup (e.g., `admin:admin`). Change it after first login via web interface.
 
 ---
 
@@ -287,18 +294,22 @@ sudo systemctl start orbit
 ```
 orbit/
 ├── cmd/
-│   └── setup/          # Interactive setup utility
+│   └── setup/          # Interactive setup utility (orbit-setup)
 ├── internal/
-│   ├── api/            # HTTP handlers
-│   ├── auth/           # Authentication logic
+│   ├── api/            # HTTP handlers (REST API endpoints)
+│   ├── auth/           # Authentication & rate limiting
 │   ├── config/         # Configuration management
 │   ├── configfiles/    # Config file editing (RAW + Interactive)
-│   ├── network/        # Network management
-│   ├── packages/       # Package management
-│   ├── services/       # Systemd services
-│   ├── system/         # System metrics
-│   ├── users/          # User management
-│   └── util/           # Utility functions
+│   ├── network/        # Network management (with validation)
+│   ├── packages/       # Package management (with validation)
+│   ├── services/       # Systemd services (with validation)
+│   ├── system/         # System metrics collection
+│   ├── users/          # User management (with validation)
+│   └── util/           # Utility functions (crypto, command execution)
+├── debian/             # Debian package structure
+│   ├── DEBIAN/         # Package metadata & maintainer scripts
+│   ├── lib/systemd/    # Systemd unit file
+│   └── usr/share/doc/  # Documentation & license
 ├── web/                # Frontend assets (embedded)
 │   ├── index.html
 │   ├── style.css
@@ -306,8 +317,10 @@ orbit/
 │   └── favicon.svg
 ├── main.go             # Entry point
 ├── Makefile
-├── install.sh
-├── uninstall.sh
+├── install.sh          # Source installation script
+├── uninstall.sh        # Uninstallation script
+├── build-deb.sh        # Debian package builder
+├── build-apt-repo.sh   # APT repository generator
 └── README.md
 ```
 
@@ -355,11 +368,15 @@ sudo ss -tuln | grep 3333
 ### Permission Denied
 Orbit requires root privileges for system management. Run with `sudo` or via systemd service.
 
-### Can't Login
+### Can't Login After Reinstall
+
+**No need to clear cookies!** After reinstall, just login with new credentials. The system automatically handles invalid session cookies.
+
+If you still have issues:
 ```bash
 # Reset credentials
 sudo systemctl stop orbit
-sudo ./orbit-setup
+sudo orbit-setup
 sudo systemctl start orbit
 ```
 
@@ -417,7 +434,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - **Issues**: https://github.com/grosman-net/orbit/issues
-- **Documentation**: https://github.com/grosman-net/orbit/wiki
+- **Releases**: https://github.com/grosman-net/orbit/releases
+- **APT Repository**: https://grosman-net.github.io/orbit
+
+---
+
+## 🔖 Recent Releases
+
+### v1.1.2 (2025-11-11) - Bug Fixes
+- Fixed session cookie issue on reinstall (no more manual clearing!)
+- Added validation for logs API parameters
+- Enhanced input validation in user management
+- **[Release Notes](https://github.com/grosman-net/orbit/releases/tag/v1.1.2)**
+
+### v1.1.1 (2025-11-11) - Critical Security Fixes 🔒
+- Fixed 3 critical command injection vulnerabilities
+- Added rate limiting on login endpoint
+- Enhanced session security
+- **[Full Security Report](SECURITY_FIXES_v1.1.1.md)**
+
+### v1.1.0 (2025-11-10) - APT Repository Support
+- One-line installation via APT
+- Automatic updates via `apt upgrade`
+- Interactive package installation
+- **[Release Notes](https://github.com/grosman-net/orbit/releases/tag/v1.1.0)**
+
+**See all releases:** [RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ---
 
