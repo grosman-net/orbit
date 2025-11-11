@@ -5,6 +5,38 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-11-11
+
+### Bug Fixes 🐛
+
+**1. handleLogs() - Missing Unit Parameter Validation**
+- **Issue:** No validation that `unit` parameter is provided
+- **Impact:** Could cause errors when querying logs without unit
+- **Fix:** Added required parameter check, returns 400 Bad Request if missing
+
+**2. handleLogs() - Lines Parameter Validation**
+- **Issue:** No validation for negative or excessive line counts
+- **Impact:** Could request negative lines or DoS with huge numbers
+- **Fix:** Added range validation (1-10000 lines)
+
+**3. Session Cookie Issue on Reinstall**
+- **Issue:** After reinstalling Orbit, old cookies cause auth errors
+- **Impact:** Users had to manually clear cookies to login
+- **Fix:** Gracefully handle invalid sessions due to secret change, auto-create new session
+
+**4. isUserLocked() - Missing Username Validation**
+- **Issue:** No validation before running `passwd -S` command
+- **Impact:** Could attempt to check invalid usernames
+- **Fix:** Added username validation before checking lock status
+
+### Technical Details
+- Enhanced error handling in logs API endpoint
+- Improved session management on config changes
+- Added input validation in user lock status check
+- Better user experience on reinstall (no manual cookie clearing needed)
+
+---
+
 ## [1.1.1] - 2025-11-11
 
 ### Security Fixes 🔒

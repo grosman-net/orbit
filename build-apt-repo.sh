@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="${1:-1.1.1}"
+VERSION="${1:-1.1.2}"
 REPO_DIR="apt-repo"
 DIST="stable"
 

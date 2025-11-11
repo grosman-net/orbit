@@ -60,7 +60,15 @@ func Login(username, password string) bool {
 }
 
 func GetSession(r *http.Request) (*sessions.Session, error) {
-	return store.Get(r, "orbit-session")
+	// BUG FIX #3: Gracefully handle invalid sessions due to secret change
+	session, err := store.Get(r, "orbit-session")
+	if err != nil {
+		// Session decode failed (likely due to secret change on reinstall)
+		// Return new empty session instead of error
+		session, _ = store.New(r, "orbit-session")
+		return session, nil
+	}
+	return session, nil
 }
 
 func IsAuthenticated(r *http.Request) bool {
