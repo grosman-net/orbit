@@ -986,6 +986,37 @@ tr:hover {
     margin-bottom: 12px;
 }
 
+/* Interface Add Form */
+.interface-add-form {
+    background: var(--accent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.interface-add-form h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.interface-add-form select {
+    padding: 8px 12px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.interface-add-form select:focus {
+    outline: none;
+    border-color: var(--mint);
+}
+
 /* Route Table */
 .route-table {
     background: var(--accent);
@@ -997,7 +1028,7 @@ tr:hover {
 
 .route-item {
     display: grid;
-    grid-template-columns: 2fr 2fr 1fr auto;
+    grid-template-columns: 2fr 2fr 1fr 1fr auto;
     gap: 12px;
     padding: 12px;
     background: var(--background);
@@ -1006,10 +1037,34 @@ tr:hover {
     margin-bottom: 8px;
     align-items: center;
     font-size: 13px;
+    transition: all 0.2s;
+}
+
+.route-item:hover {
+    border-color: var(--mint);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
 }
 
 .route-item:last-child {
     margin-bottom: 0;
+}
+
+.route-item-default {
+    background: rgba(16, 185, 129, 0.05);
+    border-color: var(--mint);
+}
+
+.route-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    margin-left: 8px;
+    background: var(--mint);
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .route-label {
@@ -1051,8 +1106,23 @@ tr:hover {
     }
     
     .route-item {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
+    }
+    
+    .route-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .interface-controls {
+        flex-wrap: wrap;
+    }
+    
+    .interface-controls button {
+        font-size: 11px;
+        padding: 4px 8px;
     }
 }
 
@@ -1066,16 +1136,18 @@ tr:hover {
 }
 
 .mode-btn {
-    padding: 8px 16px;
+    padding: 8px 20px;
     background: transparent;
     border: none;
     color: var(--muted-foreground);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    min-width: 80px;
 }
 
 .mode-btn:hover {

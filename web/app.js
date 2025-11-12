@@ -588,39 +588,57 @@ async function loadNetwork() {
 function displayNetwork(data) {
     // Display interfaces
     const interfacesContainer = document.getElementById('networkInterfaces');
-    interfacesContainer.innerHTML = data.interfaces.map(iface => `
-        <div class="interface-card">
-            <div class="interface-header">
-                <div class="interface-name">
-                    ${iface.name}
-                    <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
-                </div>
-                <div class="interface-controls">
-                    <button class="btn-success" onclick="interfaceUp('${iface.name}')">Up</button>
-                    <button class="btn-danger" onclick="interfaceDown('${iface.name}')">Down</button>
-                </div>
-            </div>
-            <div class="interface-info">
-                <span class="interface-info-label">MAC:</span>
-                <span class="interface-info-value">${iface.mac || 'N/A'}</span>
-                <span class="interface-info-label">Addresses:</span>
-                <span class="interface-info-value">${iface.addresses.join(', ') || 'None'}</span>
-                ${iface.mtu ? `<span class="interface-info-label">MTU:</span><span class="interface-info-value">${iface.mtu}</span>` : ''}
-            </div>
-            <div class="interface-config-form">
-                <div class="form-row">
-                    <label>IP/Mask:</label>
-                    <input type="text" id="ip-${iface.name}" placeholder="10.0.0.10/24" />
-                    <button class="btn-secondary" onclick="setInterfaceIP('${iface.name}', false)">Apply</button>
-                </div>
-                <div class="form-row">
-                    <label>Gateway:</label>
-                    <input type="text" id="gw-${iface.name}" placeholder="10.0.0.1" />
-                    <button class="btn-primary" onclick="setInterfaceIP('${iface.name}', true)">Apply & Save</button>
-                </div>
+    interfacesContainer.innerHTML = `
+        <div class="interface-add-form">
+            <h4>Add Virtual Interface</h4>
+            <div class="form-row">
+                <label>Name:</label>
+                <input type="text" id="new-iface-name" placeholder="br0, vlan10, etc." />
+                <select id="new-iface-type">
+                    <option value="bridge">Bridge</option>
+                    <option value="vlan">VLAN</option>
+                    <option value="dummy">Dummy</option>
+                    <option value="veth">Virtual Ethernet</option>
+                </select>
+                <button class="btn-success" onclick="addInterface()">Add Interface</button>
             </div>
         </div>
-    `).join('');
+        ${data.interfaces.map(iface => `
+            <div class="interface-card">
+                <div class="interface-header">
+                    <div class="interface-name">
+                        ${iface.name}
+                        <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
+                    </div>
+                    <div class="interface-controls">
+                        <button class="btn-success" onclick="interfaceUp('${iface.name}')">Up</button>
+                        <button class="btn-danger" onclick="interfaceDown('${iface.name}')">Down</button>
+                        ${!['lo', 'eth0', 'ens3', 'enp0s3'].includes(iface.name) ? 
+                            `<button class="btn-danger" onclick="deleteInterface('${iface.name}')">Delete</button>` : ''}
+                    </div>
+                </div>
+                <div class="interface-info">
+                    <span class="interface-info-label">MAC:</span>
+                    <span class="interface-info-value">${iface.mac || 'N/A'}</span>
+                    <span class="interface-info-label">Addresses:</span>
+                    <span class="interface-info-value">${iface.addresses.join(', ') || 'None'}</span>
+                    ${iface.mtu ? `<span class="interface-info-label">MTU:</span><span class="interface-info-value">${iface.mtu}</span>` : ''}
+                </div>
+                <div class="interface-config-form">
+                    <div class="form-row">
+                        <label>IP/Mask:</label>
+                        <input type="text" id="ip-${iface.name}" placeholder="10.0.0.10/24" />
+                        <button class="btn-secondary" onclick="setInterfaceIP('${iface.name}', false)">Apply</button>
+                    </div>
+                    <div class="form-row">
+                        <label>Gateway:</label>
+                        <input type="text" id="gw-${iface.name}" placeholder="10.0.0.1" />
+                        <button class="btn-primary" onclick="setInterfaceIP('${iface.name}', true)">Apply & Save</button>
+                    </div>
+                </div>
+            </div>
+        `).join('')}
+    `;
 
     // Display firewall
     const firewallControl = document.getElementById('firewallControl');
@@ -660,34 +678,57 @@ function displayNetwork(data) {
             </div>
             <div class="form-row">
                 <label>Gateway:</label>
-                <input type="text" id="route-gw" placeholder="10.0.0.1" />
+                <input type="text" id="route-gw" placeholder="10.0.0.1 (optional)" />
             </div>
             <div class="form-row">
                 <label>Interface:</label>
-                <input type="text" id="route-iface" placeholder="eth0" />
+                <input type="text" id="route-iface" placeholder="eth0 (optional)" />
                 <button class="btn-primary" onclick="addRoute()">Add Route</button>
             </div>
+            <p style="font-size: 12px; color: var(--muted-foreground); margin-top: 8px;">
+                Note: Specify either gateway, interface, or both. Default route: 0.0.0.0/0 or default
+            </p>
         </div>
         <div class="route-table">
-            ${data.routes && data.routes.length > 0 ? data.routes.map(route => `
-                <div class="route-item">
-                    <div>
-                        <div class="route-label">Destination</div>
-                        <div class="route-value">${route.destination}</div>
-                    </div>
-                    <div>
-                        <div class="route-label">Gateway</div>
-                        <div class="route-value">${route.gateway || '-'}</div>
-                    </div>
-                    <div>
-                        <div class="route-label">Interface</div>
-                        <div class="route-value">${route.interface || '-'}</div>
-                    </div>
-                    <div class="route-actions">
-                        <button class="btn-danger" onclick="deleteRoute('${route.destination}')">Delete</button>
-                    </div>
+            ${data.routes && data.routes.length > 0 ? `
+                <div style="margin-bottom: 12px; font-size: 13px; font-weight: 600; color: var(--muted-foreground);">
+                    Current Routes (${data.routes.length})
                 </div>
-            `).join('') : '<p style="padding: 12px; text-align: center; color: var(--muted-foreground);">No routes configured</p>'}
+                ${data.routes.map(route => {
+                    const isDefault = route.destination === 'default' || route.destination === '0.0.0.0/0';
+                    return `
+                        <div class="route-item ${isDefault ? 'route-item-default' : ''}">
+                            <div>
+                                <div class="route-label">Destination</div>
+                                <div class="route-value">
+                                    ${route.destination}
+                                    ${isDefault ? '<span class="route-badge">Default</span>' : ''}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="route-label">Gateway</div>
+                                <div class="route-value">${route.gateway || '-'}</div>
+                            </div>
+                            <div>
+                                <div class="route-label">Interface</div>
+                                <div class="route-value">${route.interface || '-'}</div>
+                            </div>
+                            ${route.metric ? `
+                            <div>
+                                <div class="route-label">Metric</div>
+                                <div class="route-value">${route.metric}</div>
+                            </div>
+                            ` : '<div></div>'}
+                            <div class="route-actions">
+                                <button class="btn-danger" onclick="deleteRoute('${route.destination}')" 
+                                        ${isDefault ? 'title="Warning: This is the default route"' : ''}>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            ` : '<p style="padding: 12px; text-align: center; color: var(--muted-foreground);">No routes configured</p>'}
         </div>
     `;
 }
@@ -814,6 +855,42 @@ window.deleteRoute = async function(destination) {
         loadNetwork();
     } catch (error) {
         alert('Failed to delete route: ' + error.message);
+    }
+};
+
+window.addInterface = async function() {
+    const name = document.getElementById('new-iface-name').value.trim();
+    const type = document.getElementById('new-iface-type').value;
+    
+    if (!name) {
+        alert('Please enter an interface name');
+        return;
+    }
+    
+    try {
+        await api('/network/interface/add', {
+            method: 'POST',
+            body: JSON.stringify({ name, type }),
+        });
+        document.getElementById('new-iface-name').value = '';
+        alert('Interface added successfully');
+        loadNetwork();
+    } catch (error) {
+        alert('Failed to add interface: ' + error.message);
+    }
+};
+
+window.deleteInterface = async function(iface) {
+    if (!confirm(`Delete interface ${iface}? This will remove the interface from the system.`)) return;
+    try {
+        await api('/network/interface/delete', {
+            method: 'POST',
+            body: JSON.stringify({ interface: iface }),
+        });
+        alert('Interface deleted successfully');
+        loadNetwork();
+    } catch (error) {
+        alert('Failed to delete interface: ' + error.message);
     }
 };
 

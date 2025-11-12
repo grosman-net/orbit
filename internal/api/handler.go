@@ -53,6 +53,8 @@ func NewHandler(webFS embed.FS, cfg *config.Config) http.Handler {
 	api.HandleFunc("/network/interface/up", auth.RequireAuth(h.handleInterfaceUp)).Methods("POST")
 	api.HandleFunc("/network/interface/down", auth.RequireAuth(h.handleInterfaceDown)).Methods("POST")
 	api.HandleFunc("/network/interface/setip", auth.RequireAuth(h.handleInterfaceSetIP)).Methods("POST")
+	api.HandleFunc("/network/interface/add", auth.RequireAuth(h.handleInterfaceAdd)).Methods("POST")
+	api.HandleFunc("/network/interface/delete", auth.RequireAuth(h.handleInterfaceDelete)).Methods("POST")
 	api.HandleFunc("/network/route/add", auth.RequireAuth(h.handleRouteAdd)).Methods("POST")
 	api.HandleFunc("/network/route/delete", auth.RequireAuth(h.handleRouteDelete)).Methods("POST")
 	api.HandleFunc("/users", auth.RequireAuth(h.handleUsers)).Methods("GET")

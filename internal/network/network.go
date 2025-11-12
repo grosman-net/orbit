@@ -481,3 +481,50 @@ func isValidIP(ip string) bool {
 	}
 	return true
 }
+
+// AddVirtualInterface adds a virtual network interface (VLAN, bridge, etc.)
+func AddVirtualInterface(name, ifaceType string) error {
+	// Validate interface name to prevent injection
+	if !isValidInterfaceName(name) {
+		return fmt.Errorf("invalid interface name: %s", name)
+	}
+	
+	// Validate interface type
+	validTypes := []string{"bridge", "vlan", "dummy", "veth"}
+	isValidType := false
+	for _, t := range validTypes {
+		if ifaceType == t {
+			isValidType = true
+			break
+		}
+	}
+	if !isValidType {
+		return fmt.Errorf("invalid interface type: %s (must be bridge, vlan, dummy, or veth)", ifaceType)
+	}
+	
+	_, err := util.RunCommand("ip", "link", "add", name, "type", ifaceType)
+	return err
+}
+
+// DeleteInterface deletes a network interface
+func DeleteInterface(name string) error {
+	// Validate interface name to prevent injection
+	if !isValidInterfaceName(name) {
+		return fmt.Errorf("invalid interface name: %s", name)
+	}
+	
+	// Prevent deletion of critical interfaces
+	protectedInterfaces := []string{"lo", "eth0", "ens3", "enp0s3"}
+	for _, protected := range protectedInterfaces {
+		if name == protected {
+			return fmt.Errorf("cannot delete protected interface: %s", name)
+		}
+	}
+	
+	// First bring it down
+	_ = SetInterfaceDown(name)
+	
+	// Then delete it
+	_, err := util.RunCommand("ip", "link", "delete", name)
+	return err
+}

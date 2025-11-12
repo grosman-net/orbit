@@ -179,3 +179,37 @@ func (h *Handler) handleRouteDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	h.writeJSON(w, map[string]bool{"success": true})
 }
+
+// Interface add/delete
+func (h *Handler) handleInterfaceAdd(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name string `json:"name"`
+		Type string `json:"type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := network.AddVirtualInterface(req.Name, req.Type); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, map[string]bool{"success": true})
+}
+
+func (h *Handler) handleInterfaceDelete(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Interface string `json:"interface"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.writeError(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if err := network.DeleteInterface(req.Interface); err != nil {
+		h.writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	h.writeJSON(w, map[string]bool{"success": true})
+}
