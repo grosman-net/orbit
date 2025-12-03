@@ -107,10 +107,10 @@ The service starts automatically! 🎉
 
 ```bash
 # Download the latest release
-wget https://github.com/grosman-net/orbit/releases/download/v1.1.2/orbit_1.1.2_amd64.deb
+wget https://github.com/grosman-net/orbit/releases/download/v1.1.3/orbit_1.1.3_amd64.deb
 
 # Install
-sudo dpkg -i orbit_1.1.2_amd64.deb
+sudo dpkg -i orbit_1.1.3_amd64.deb
 
 # The service will start automatically after prompting for configuration
 ```
