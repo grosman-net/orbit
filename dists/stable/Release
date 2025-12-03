@@ -1,0 +1,19 @@
+Origin: Orbit
+Label: Orbit
+Suite: stable
+Codename: stable
+Version: 1.1.3
+Architectures: amd64 arm64
+Components: main
+Description: Orbit Server Management Panel APT Repository
+Date: Wed, 03 Dec 2025 13:12:13 +0000
+MD5Sum:
+ 0c5ac907c672fc6b5e3a308b08d37ae2              926 main/binary-amd64/Packages
+ c61d02790e12abc026676a28c6d93a96              578 main/binary-amd64/Packages.gz
+ 45539d545eee87c83928bced551c7d60              926 main/binary-arm64/Packages
+ 8be2931c0eea908941f726c6a0537c0e              576 main/binary-arm64/Packages.gz
+SHA256:
+ 551a41986f52ec7752eb1f3cf84fea624f45a8b7fd2be8e4b09f657dfccb8e94              926 main/binary-amd64/Packages
+ c7984c0671c13a7a32fffb517636dd1a4f1eb3827e931f54e96acfe19d8e726d              578 main/binary-amd64/Packages.gz
+ 41175e6cb02b05d13ecfefa8829b5ae065daee78d8571e41a8c326f6f073cc9f              926 main/binary-arm64/Packages
+ ee74b06f661cc56050d504379dbb949b47274fb4d3d976130273bbffff6ca2ab              576 main/binary-arm64/Packages.gz
