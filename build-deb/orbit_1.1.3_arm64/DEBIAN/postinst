@@ -1,0 +1,56 @@
+#!/bin/bash
+set -e
+
+# Create config directory
+mkdir -p /etc/orbit
+chmod 755 /etc/orbit
+
+# Run setup if config doesn't exist
+if [ ! -f /etc/orbit/config.json ]; then
+    echo ""
+    echo "═══════════════════════════════════════════════════════"
+    echo "  Orbit Configuration"
+    echo "═══════════════════════════════════════════════════════"
+    echo ""
+    
+    # Run interactive setup
+    /usr/local/bin/orbit-setup
+    
+    echo ""
+    echo "═══════════════════════════════════════════════════════"
+    echo "  Starting Orbit service..."
+    echo "═══════════════════════════════════════════════════════"
+    
+    # Enable and start service
+    systemctl daemon-reload
+    systemctl enable orbit
+    systemctl start orbit
+    
+    echo ""
+    echo "✅ Orbit is now running!"
+    echo ""
+    
+    # Show access info from config
+    if [ -f /etc/orbit/config.json ]; then
+        PORT=$(grep -Po '"port":\s*\K\d+' /etc/orbit/config.json 2>/dev/null || echo "3333")
+        USERNAME=$(grep -Po '"admin_username":\s*"\K[^"]+' /etc/orbit/config.json 2>/dev/null || echo "admin")
+        IP=$(ip route get 1.1.1.1 2>/dev/null | grep -Po 'src \K[\d.]+' || hostname -I | awk '{print $1}' || echo "localhost")
+        
+        echo "Access panel at: http://$IP:$PORT"
+        echo "Username: $USERNAME"
+        echo "Password: $USERNAME (change after first login)"
+    fi
+    echo ""
+else
+    # Config exists, reload and restart service
+    systemctl daemon-reload
+    
+    # Check if service was running before upgrade
+    if systemctl is-active --quiet orbit 2>/dev/null; then
+        echo "Restarting Orbit service..."
+        systemctl restart orbit
+    fi
+fi
+
+exit 0
+
