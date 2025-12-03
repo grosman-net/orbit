@@ -604,39 +604,39 @@ function displayNetwork(data) {
             </div>
         </div>
         ${data.interfaces.map(iface => `
-            <div class="interface-card">
-                <div class="interface-header">
-                    <div class="interface-name">
-                        ${iface.name}
-                        <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
-                    </div>
-                    <div class="interface-controls">
-                        <button class="btn-success" onclick="interfaceUp('${iface.name}')">Up</button>
-                        <button class="btn-danger" onclick="interfaceDown('${iface.name}')">Down</button>
+        <div class="interface-card">
+            <div class="interface-header">
+                <div class="interface-name">
+                    ${iface.name}
+                    <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
+                </div>
+                <div class="interface-controls">
+                    <button class="btn-success" onclick="interfaceUp('${iface.name}')">Up</button>
+                    <button class="btn-danger" onclick="interfaceDown('${iface.name}')">Down</button>
                         ${!['lo', 'eth0', 'ens3', 'enp0s3'].includes(iface.name) ? 
                             `<button class="btn-danger" onclick="deleteInterface('${iface.name}')">Delete</button>` : ''}
-                    </div>
-                </div>
-                <div class="interface-info">
-                    <span class="interface-info-label">MAC:</span>
-                    <span class="interface-info-value">${iface.mac || 'N/A'}</span>
-                    <span class="interface-info-label">Addresses:</span>
-                    <span class="interface-info-value">${iface.addresses.join(', ') || 'None'}</span>
-                    ${iface.mtu ? `<span class="interface-info-label">MTU:</span><span class="interface-info-value">${iface.mtu}</span>` : ''}
-                </div>
-                <div class="interface-config-form">
-                    <div class="form-row">
-                        <label>IP/Mask:</label>
-                        <input type="text" id="ip-${iface.name}" placeholder="10.0.0.10/24" />
-                        <button class="btn-secondary" onclick="setInterfaceIP('${iface.name}', false)">Apply</button>
-                    </div>
-                    <div class="form-row">
-                        <label>Gateway:</label>
-                        <input type="text" id="gw-${iface.name}" placeholder="10.0.0.1" />
-                        <button class="btn-primary" onclick="setInterfaceIP('${iface.name}', true)">Apply & Save</button>
-                    </div>
                 </div>
             </div>
+            <div class="interface-info">
+                <span class="interface-info-label">MAC:</span>
+                <span class="interface-info-value">${iface.mac || 'N/A'}</span>
+                <span class="interface-info-label">Addresses:</span>
+                <span class="interface-info-value">${iface.addresses.join(', ') || 'None'}</span>
+                ${iface.mtu ? `<span class="interface-info-label">MTU:</span><span class="interface-info-value">${iface.mtu}</span>` : ''}
+            </div>
+            <div class="interface-config-form">
+                <div class="form-row">
+                    <label>IP/Mask:</label>
+                    <input type="text" id="ip-${iface.name}" placeholder="10.0.0.10/24" />
+                    <button class="btn-secondary" onclick="setInterfaceIP('${iface.name}', false)">Apply</button>
+                </div>
+                <div class="form-row">
+                    <label>Gateway:</label>
+                    <input type="text" id="gw-${iface.name}" placeholder="10.0.0.1" />
+                    <button class="btn-primary" onclick="setInterfaceIP('${iface.name}', true)">Apply & Save</button>
+                </div>
+            </div>
+        </div>
         `).join('')}
     `;
 
@@ -698,34 +698,34 @@ function displayNetwork(data) {
                     const isDefault = route.destination === 'default' || route.destination === '0.0.0.0/0';
                     return `
                         <div class="route-item ${isDefault ? 'route-item-default' : ''}">
-                            <div>
-                                <div class="route-label">Destination</div>
+                    <div>
+                        <div class="route-label">Destination</div>
                                 <div class="route-value">
                                     ${route.destination}
                                     ${isDefault ? '<span class="route-badge">Default</span>' : ''}
                                 </div>
-                            </div>
-                            <div>
-                                <div class="route-label">Gateway</div>
-                                <div class="route-value">${route.gateway || '-'}</div>
-                            </div>
-                            <div>
-                                <div class="route-label">Interface</div>
-                                <div class="route-value">${route.interface || '-'}</div>
-                            </div>
+                    </div>
+                    <div>
+                        <div class="route-label">Gateway</div>
+                        <div class="route-value">${route.gateway || '-'}</div>
+                    </div>
+                    <div>
+                        <div class="route-label">Interface</div>
+                        <div class="route-value">${route.interface || '-'}</div>
+                    </div>
                             ${route.metric ? `
                             <div>
                                 <div class="route-label">Metric</div>
                                 <div class="route-value">${route.metric}</div>
                             </div>
                             ` : '<div></div>'}
-                            <div class="route-actions">
+                    <div class="route-actions">
                                 <button class="btn-danger" onclick="deleteRoute('${route.destination}')" 
                                         ${isDefault ? 'title="Warning: This is the default route"' : ''}>
                                     Delete
                                 </button>
-                            </div>
-                        </div>
+                    </div>
+                </div>
                     `;
                 }).join('')}
             ` : '<p style="padding: 12px; text-align: center; color: var(--muted-foreground);">No routes configured</p>'}
