@@ -1,0 +1,23 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    purge)
+        # Remove config directory on purge
+        if [ -d /etc/orbit ]; then
+            echo "Removing configuration directory /etc/orbit..."
+            rm -rf /etc/orbit
+        fi
+        
+        # Reload systemd
+        systemctl daemon-reload
+        ;;
+    
+    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        # Just reload systemd daemon
+        systemctl daemon-reload
+        ;;
+esac
+
+exit 0
+
