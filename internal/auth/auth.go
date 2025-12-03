@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/gob"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
@@ -36,11 +37,20 @@ func Init(c *config.Config) {
 	}
 
 	store = sessions.NewCookieStore(secret)
+
+	// Decide whether to mark cookie as Secure based on configured public URL.
+	secureCookie := false
+	if cfg.PublicURL != "" {
+		if u, err := url.Parse(cfg.PublicURL); err == nil && u.Scheme == "https" {
+			secureCookie = true
+		}
+	}
+
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 7, // 7 days
 		HttpOnly: true,
-		Secure:   false, // Set to true if using HTTPS
+		Secure:   secureCookie,
 		SameSite: http.SameSiteLaxMode,
 	}
 

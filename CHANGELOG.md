@@ -5,6 +5,38 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-12-03
+
+### Security & Reliability Fixes 🔒
+
+**1. Secure Session Cookies Based on Public URL**
+- **Issue:** Session cookies were always created with `Secure=false`, even when Orbit was served over HTTPS
+- **Impact:** In HTTPS deployments, cookies could potentially be sent over plain HTTP if misconfigured
+- **Fix:** `auth.Init()` now parses `PublicURL` and automatically sets `Secure=true` for HTTPS URLs
+
+**2. Stronger Randomness for Session Secrets**
+- **Issue:** `GenerateRandomString()` ignored errors from `crypto/rand.Read`
+- **Impact:** In the (rare) case of RNG failure, secrets could be generated with lower entropy without any warning
+- **Fix:** Function now fails fast (panic) if secure randomness cannot be obtained, instead of silently degrading
+
+**3. Config Save Robustness on Read-Only Systems**
+- **Issue:** Saving configs created temporary files directly under `/etc`, failing immediately on read‑only filesystems
+- **Impact:** Users saw errors like `open /etc/ssh/sshd_config.tmp: read-only file system` ([#6](https://github.com/grosman-net/orbit/issues/6))
+- **Fix:** Temporary files are now written under `/tmp` and then moved into place via `sudo mv`, with clearer error messages on permission/FS issues
+
+**4. Safer User Deletion Feedback**
+- **Issue:** Deleting a logged‑in user resulted in a generic `exit status 8` error ([#7](https://github.com/grosman-net/orbit/issues/7))
+- **Impact:** Confusing UX and unclear reason why deletion failed
+- **Fix:** `users.Delete()` now inspects `userdel` output and returns a clear, user‑friendly error when the user is currently logged in
+
+### Technical Details
+- Updated `internal/auth/auth.go` to derive cookie `Secure` flag from `PublicURL`
+- Hardened `internal/util/util.go::GenerateRandomString()` to handle RNG failures explicitly
+- Changed `internal/configfiles/configfiles.go::Write()` to use `/tmp` for temp files and improved error reporting
+- Improved `internal/users/users.go::Delete()` error messages for logged‑in users
+
+---
+
 ## [1.1.2] - 2025-11-11
 
 ### Bug Fixes 🐛

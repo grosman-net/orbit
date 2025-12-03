@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net"
 	"os/exec"
 	"strings"
@@ -10,9 +11,20 @@ import (
 
 // GenerateRandomString generates a random hex string of given length
 func GenerateRandomString(length int) string {
-	bytes := make([]byte, length)
-	rand.Read(bytes)
-	return hex.EncodeToString(bytes)[:length]
+	// We need length hex characters; each byte gives 2 hex chars.
+	byteLen := (length + 1) / 2
+	buf := make([]byte, byteLen)
+	if _, err := rand.Read(buf); err != nil {
+		// This should never happen on a healthy system; fail fast instead of
+		// silently producing low-entropy secrets.
+		panic(fmt.Sprintf("failed to generate secure random data: %v", err))
+	}
+
+	hexStr := hex.EncodeToString(buf)
+	if len(hexStr) < length {
+		return hexStr
+	}
+	return hexStr[:length]
 }
 
 // DetectPrimaryIP attempts to detect the primary non-loopback IP address

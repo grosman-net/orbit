@@ -3,6 +3,7 @@ package configfiles
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"orbit/internal/util"
 )
@@ -86,15 +87,28 @@ func Write(id, content string) error {
 		return fmt.Errorf("config is not editable")
 	}
 
-	// Write to temp file first
-	tmpFile := cfg.Path + ".tmp"
-	if err := os.WriteFile(tmpFile, []byte(content), 0644); err != nil {
-		return err
+	// Write to temp file first in a writable location to avoid issues with read-only /etc
+	tmpDir := "/tmp"
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		return fmt.Errorf("failed to prepare temp dir: %w", err)
 	}
 
-	// Move with sudo
-	_, err := util.RunCommand("mv", tmpFile, cfg.Path)
-	return err
+	tmpFile := filepath.Join(tmpDir, fmt.Sprintf("orbit-config-%s.tmp", cfg.ID))
+	if err := os.WriteFile(tmpFile, []byte(content), 0644); err != nil {
+		// Most common case: read-only filesystem in the target environment
+		return fmt.Errorf("failed to write temporary config file: %w", err)
+	}
+
+	// Move with sudo into the real config path
+	if _, err := util.RunCommand("mv", tmpFile, cfg.Path); err != nil {
+		// Surface a clearer error when target filesystem is read-only
+		if os.IsPermission(err) {
+			return fmt.Errorf("failed to save config: permission denied (filesystem may be read-only)")
+		}
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	return nil
 }
 
 func findConfig(id string) *ConfigFile {

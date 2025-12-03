@@ -89,8 +89,15 @@ func Delete(username string) error {
 	if !isValidUsername(username) {
 		return fmt.Errorf("invalid username: %s", username)
 	}
-	_, err := util.RunCommand("userdel", "-r", username)
-	return err
+	output, err := util.RunCommand("userdel", "-r", username)
+	if err != nil {
+		// userdel exit status 8 usually means "user is currently logged in"
+		if strings.Contains(output, "currently logged in") {
+			return fmt.Errorf("cannot delete user %s: user is currently logged in", username)
+		}
+		return fmt.Errorf("failed to delete user %s: %v", username, err)
+	}
+	return nil
 }
 
 func Lock(username string) error {

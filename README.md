@@ -2,7 +2,7 @@
 
 **Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
-![Version](https://img.shields.io/badge/version-1.1.2-blue)
+![Version](https://img.shields.io/badge/version-1.1.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
 ![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
@@ -440,6 +440,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 🔖 Recent Releases
+
+### v1.1.3 (2025-12-03) - Security & Stability
+- Secure session cookies when served over HTTPS
+- Stronger random secret generation with explicit RNG error handling
+- More robust config saving on read-only filesystems (temp files in `/tmp`)
+- Clearer errors when deleting logged-in users
+- **[Release Notes](https://github.com/grosman-net/orbit/releases/tag/v1.1.3)**
 
 ### v1.1.2 (2025-11-11) - Bug Fixes
 - Fixed session cookie issue on reinstall (no more manual clearing!)
