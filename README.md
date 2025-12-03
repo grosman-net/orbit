@@ -1,11 +1,11 @@
 # 🛰️ Orbit - Server Management Panel
 
-**Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
+**Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian/RHEL systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
-![Version](https://img.shields.io/badge/version-1.1.3-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)
-![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian-orange)
+![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian%20%7C%20RHEL%20%7C%20CentOS%20%7C%20Rocky-orange)
 
 ---
 
@@ -103,19 +103,39 @@ During installation, you'll be prompted for:
 
 The service starts automatically! 🎉
 
-#### Option 2: Using .deb Package
+#### Option 2: Using .deb Package (Ubuntu/Debian)
 
 ```bash
 # Download the latest release
-wget https://github.com/grosman-net/orbit/releases/download/v1.1.3/orbit_1.1.3_amd64.deb
+wget https://github.com/grosman-net/orbit/releases/download/v1.2.0/orbit_1.2.0_amd64.deb
 
 # Install
-sudo dpkg -i orbit_1.1.3_amd64.deb
+sudo dpkg -i orbit_1.2.0_amd64.deb
 
 # The service will start automatically after prompting for configuration
 ```
 
-#### Option 3: From Source
+#### Option 3: Using .rpm Package (RHEL/CentOS/Rocky Linux)
+
+```bash
+# Download the latest release
+wget https://github.com/grosman-net/orbit/releases/download/v1.2.0/orbit-1.2.0-1.el8.x86_64.rpm
+
+# Install
+sudo rpm -ivh orbit-1.2.0-1.el8.x86_64.rpm
+
+# Or using yum/dnf
+sudo yum localinstall orbit-1.2.0-1.el8.x86_64.rpm
+# or
+sudo dnf localinstall orbit-1.2.0-1.el8.x86_64.rpm
+
+# Configure and start
+sudo orbit-setup
+sudo systemctl enable orbit
+sudo systemctl start orbit
+```
+
+#### Option 4: From Source
 
 ```bash
 # Clone the repository
@@ -416,7 +436,7 @@ Contributions are welcome! Please:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 **Author**: grosman-net
 
@@ -440,6 +460,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ## 🔖 Recent Releases
+
+### v1.2.0 (2025-12-03) - RHEL Support & License Change 🎉
+- **NEW**: Full RHEL/CentOS/Rocky Linux support with native RPM packages
+- **NEW**: Apache License 2.0 (switched from MIT)
+- Added `build-rpm.sh` script for building RPM packages
+- Support for RHEL 8+, CentOS 8+, Rocky Linux 8+, AlmaLinux 8+
+- Both x86_64 and aarch64 architectures supported
+- **[Release Notes](https://github.com/grosman-net/orbit/releases/tag/v1.2.0)**
 
 ### v1.1.3 (2025-12-03) - Security & Stability
 - Secure session cookies when served over HTTPS

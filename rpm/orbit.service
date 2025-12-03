@@ -1,0 +1,24 @@
+[Unit]
+Description=Orbit Server Management Panel
+After=network.target
+Documentation=https://github.com/grosman-net/orbit
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/orbit --config /etc/orbit/config.json
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=false
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/etc/orbit
+
+[Install]
+WantedBy=multi-user.target
+

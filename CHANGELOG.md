@@ -5,6 +5,55 @@ All notable changes to Orbit Server Management Panel will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-03
+
+### Added 🎉
+
+**1. RHEL/CentOS/Rocky Linux Support**
+- **New Platform**: Full support for RHEL-based distributions (RHEL 8+, CentOS 8+, Rocky Linux 8+, AlmaLinux 8+)
+- **RPM Packages**: Native RPM package support alongside existing DEB packages
+- **Build Script**: New `build-rpm.sh` script for building RPM packages
+- **Spec File**: Complete `rpm/orbit.spec` with proper systemd integration
+- **Architecture Support**: Both x86_64 (amd64) and aarch64 (arm64) architectures
+
+**2. License Change**
+- **New License**: Switched from MIT License to Apache License 2.0
+- **Benefits**: Better patent protection, clearer contribution guidelines
+- **Updated Files**: LICENSE, all copyright notices, package metadata
+
+### Changed 🔄
+
+**1. Platform Support Expanded**
+- Updated documentation to reflect multi-platform support
+- Installation instructions now include both DEB and RPM methods
+- Platform badges updated to show RHEL/CentOS/Rocky support
+
+**2. Package Management**
+- DEB packages now support Ubuntu/Debian
+- RPM packages support RHEL/CentOS/Rocky Linux
+- Both package formats provide identical functionality
+
+### Technical Details
+- Created `rpm/orbit.spec` for RPM package building
+- Created `rpm/orbit.service` systemd unit file for RHEL systems
+- Updated `build-apt-repo.sh` default version to 1.2.0
+- Updated all license references from MIT to Apache 2.0
+- Updated version references throughout codebase
+
+### Files Added
+- `rpm/orbit.spec` - RPM package specification
+- `rpm/orbit.service` - Systemd unit for RHEL systems
+- `build-rpm.sh` - RPM package build script
+
+### Files Modified
+- `LICENSE` - Changed to Apache 2.0
+- `README.md` - Updated platform support, license, installation methods
+- `debian/DEBIAN/control` - Updated version and description
+- `debian/usr/share/doc/orbit/copyright` - Updated to Apache 2.0
+- `CHANGELOG.md` - Added 1.2.0 release notes
+
+---
+
 ## [1.1.3] - 2025-12-03
 
 ### Security & Reliability Fixes 🔒
@@ -438,7 +487,7 @@ See `SECURITY_FIXES_v1.1.1.md` for detailed security audit report.
 ## [Unreleased]
 
 ### Planned Features
-- RHEL/CentOS/Rocky Linux support
+- ✅ ~~RHEL/CentOS/Rocky Linux support~~ (Completed in v1.2.0)
 - Docker container management
 - Backup and restore functionality
 - Two-factor authentication

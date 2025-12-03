@@ -4,6 +4,145 @@ This file contains release notes for all versions of Orbit.
 
 ---
 
+## v1.2.0 - RHEL Support & License Change (2025-12-03)
+
+**Type**: Minor Release (New Features)  
+**Platform**: Ubuntu 20.04+ / Debian 11+ / RHEL 8+ / CentOS 8+ / Rocky Linux 8+ / AlmaLinux 8+  
+**Architecture**: amd64 (x86_64), arm64 (aarch64)
+
+### 🎉 New Features
+
+**1. RHEL/CentOS/Rocky Linux Support**
+- **Native RPM Packages**: Full support for RHEL-based distributions
+- **Build Script**: New `build-rpm.sh` script for building RPM packages
+- **Spec File**: Complete `rpm/orbit.spec` with proper systemd integration
+- **Architecture Support**: Both x86_64 and aarch64 architectures
+- **Tested Platforms**: RHEL 8+, CentOS 8+, Rocky Linux 8+, AlmaLinux 8+
+
+**2. License Change to Apache 2.0**
+- **New License**: Switched from MIT License to Apache License 2.0
+- **Benefits**: Better patent protection, clearer contribution guidelines
+- **Updated**: All license references, copyright notices, and package metadata
+
+### 📦 Package Formats
+
+**DEB Packages** (Ubuntu/Debian):
+- `orbit_1.2.0_amd64.deb`
+- `orbit_1.2.0_arm64.deb`
+
+**RPM Packages** (RHEL/CentOS/Rocky):
+- `orbit-1.2.0-1.el8.x86_64.rpm`
+- `orbit-1.2.0-1.el8.aarch64.rpm`
+
+### ⬆️ Upgrade Instructions
+
+**Ubuntu/Debian (via APT):**
+```bash
+sudo apt update && sudo apt upgrade orbitctl
+```
+
+**Ubuntu/Debian (via .deb):**
+```bash
+wget https://github.com/grosman-net/orbit/releases/download/v1.2.0/orbit_1.2.0_amd64.deb
+sudo dpkg -i orbit_1.2.0_amd64.deb
+```
+
+**RHEL/CentOS/Rocky (via .rpm):**
+```bash
+wget https://github.com/grosman-net/orbit/releases/download/v1.2.0/orbit-1.2.0-1.el8.x86_64.rpm
+sudo rpm -ivh orbit-1.2.0-1.el8.x86_64.rpm
+# or
+sudo yum localinstall orbit-1.2.0-1.el8.x86_64.rpm
+```
+
+### 📊 Summary
+
+| Category | Added |
+|----------|-------|
+| New Platforms | 4 ✅ (RHEL, CentOS, Rocky, AlmaLinux) |
+| Package Formats | 1 ✅ (RPM) |
+| License | 1 ✅ (Apache 2.0) |
+| **Total** | **6** ✅ |
+
+### 🔧 Technical Details
+
+- Created `rpm/orbit.spec` for RPM package building
+- Created `rpm/orbit.service` systemd unit file for RHEL systems
+- Updated all license references from MIT to Apache 2.0
+- Updated version references throughout codebase to 1.2.0
+- Both DEB and RPM packages provide identical functionality
+
+### 📝 Files Added
+- `rpm/orbit.spec` - RPM package specification
+- `rpm/orbit.service` - Systemd unit for RHEL systems
+- `build-rpm.sh` - RPM package build script
+
+### 📝 Files Modified
+- `LICENSE` - Changed to Apache 2.0
+- `README.md` - Updated platform support, license, installation methods
+- `CHANGELOG.md` - Added 1.2.0 release notes
+- `debian/DEBIAN/control` - Updated version and description
+- `debian/usr/share/doc/orbit/copyright` - Updated to Apache 2.0
+
+---
+
+## v1.1.3 - Security & Reliability Fixes (2025-12-03)
+
+**Type**: Patch Release (Security & Bug Fixes)  
+**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Architecture**: amd64, arm64
+
+### 🔒 Security Fixes
+
+**1. Secure Session Cookies Based on Public URL**
+- Session cookies now automatically use `Secure=true` when Orbit is served over HTTPS
+- Fixes potential cookie security issues in HTTPS deployments
+
+**2. Stronger Randomness for Session Secrets**
+- `GenerateRandomString()` now fails fast (panic) if secure randomness cannot be obtained
+- Prevents silent degradation of session secret entropy
+
+### 🐛 Bug Fixes & Improvements
+
+**3. Config Save Robustness on Read-Only Systems** (Fixes #6)
+- Fixed error: `open /etc/ssh/sshd_config.tmp: read-only file system`
+- Temporary files are now written to `/tmp` first, then moved atomically
+- Better error messages for permission/FS issues
+
+**4. User Deletion Error Messages** (Fixes #7)
+- Fixed confusing `exit status 8` error when deleting logged-in users
+- Now shows clear message: "cannot delete user X: user is currently logged in"
+
+**5. Improved Error Handling**
+- Better error messages throughout the codebase
+- More user-friendly feedback for common errors
+
+### 📊 Summary
+
+| Category | Fixed |
+|----------|-------|
+| Security Issues | 2 ✅ |
+| GitHub Issues | 2 ✅ (#6, #7) |
+| Error Handling | 3 ✅ |
+| **Total** | **7** ✅ |
+
+### ⬆️ Upgrade Instructions
+
+**Via APT:**
+```bash
+sudo apt update && sudo apt upgrade orbitctl
+```
+
+**Via .deb Package:**
+```bash
+wget https://github.com/grosman-net/orbit/releases/download/v1.1.3/orbit_1.1.3_amd64.deb
+sudo dpkg -i orbit_1.1.3_amd64.deb
+```
+
+**Full changelog:** See [CHANGELOG.md](https://github.com/grosman-net/orbit/blob/main/CHANGELOG.md)
+
+---
+
 ## v1.1.2 - Bug Fixes (2025-11-11)
 
 **Type**: Patch Release (Bug Fixes)  
