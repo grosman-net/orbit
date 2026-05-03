@@ -1,4 +1,4 @@
-# 🛰️ Orbit - Server Management Panel
+# Orbit - Server Management Panel
 
 **Orbit** is a lightweight, modern web-based server management panel for Ubuntu/Debian/RHEL systems. Built with Go and vanilla JavaScript, it provides a clean interface for managing your server without the bloat.
 
@@ -9,29 +9,29 @@
 
 ---
 
-## ✨ Features
+## Features
 
-### 📊 System Monitoring
+### System Monitoring
 - Real-time CPU, memory, disk, and network metrics
 - Interactive charts with Chart.js
 - Configurable refresh intervals (3s, 5s, 10s, 30s)
 - Export system metrics to human-readable TXT format
 - Load average, uptime, process count
 
-### 📦 Package Management
+### Package Management
 - List installed packages (APT)
 - Search and install new packages
 - Remove or purge packages
 - Update package lists and upgrade all packages
 - Package name validation for security
 
-### ⚙️ Service Management
+### Service Management
 - List all systemd services
 - Start, stop, restart services
 - Enable/disable services at boot
 - View service status and descriptions
 
-### 🌐 Network & Firewall
+### Network & Firewall
 - **Interface Management**: View and control network interfaces (up/down)
 - **IP Configuration**: Set IP addresses with subnet masks
 - **Gateway Configuration**: Configure gateways with persistent netplan support
@@ -39,31 +39,31 @@
 - **UFW Firewall**: Enable/disable firewall, manage rules
 - **Real-time Updates**: All changes reflected immediately
 
-### 👥 User Management
+### User Management
 - List system users
 - Create new users
 - Lock/unlock user accounts
 - Delete users
 - View last login information
 
-### 📝 Configuration File Editor
+### Configuration File Editor
 - **RAW Mode**: Direct text editing of config files
 - **INTERACTIVE Mode**: Visual form-based editing with:
-  - Enable/Disable toggles for each option
-  - Type-specific inputs (text, number, select)
-  - Real-time validation
-  - Comment management (#)
+- Enable/Disable toggles for each option
+- Type-specific inputs (text, number, select)
+- Real-time validation
+- Comment management (#)
 - **Supported Configs**:
-  - SSH (`/etc/ssh/sshd_config`)
-  - UFW (`/etc/default/ufw`)
-  - Nginx (`/etc/nginx/nginx.conf`)
+- SSH (`/etc/ssh/sshd_config`)
+- UFW (`/etc/default/ufw`)
+- Nginx (`/etc/nginx/nginx.conf`)
 
-### 📋 System Logs
+### System Logs
 - View systemd journal logs
 - Filter by service unit
 - Real-time log viewing
 
-### 🔐 Security
+### Security
 - **Bcrypt password hashing** (DefaultCost = 10)
 - **Session-based authentication** with HTTP-only cookies
 - **Rate limiting** on login (5 attempts / 15 minutes)
@@ -75,11 +75,11 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
-#### Option 1: APT Repository (Recommended) ⭐
+#### Option 1: APT Repository (Recommended)
 
 **One-line install:**
 ```bash
@@ -90,7 +90,7 @@ curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash
 ```bash
 # Add repository
 echo 'deb [trusted=yes] https://grosman-net.github.io/orbit stable main' | \
-  sudo tee /etc/apt/sources.list.d/orbitctl.list
+sudo tee /etc/apt/sources.list.d/orbitctl.list
 
 # Install
 sudo apt update
@@ -101,7 +101,7 @@ During installation, you'll be prompted for:
 - HTTP port (default: 3333)
 - Admin username (default: admin)
 
-The service starts automatically! 🎉
+The service starts automatically!
 
 #### Option 2: Using .deb Package (Ubuntu/Debian)
 
@@ -147,11 +147,11 @@ sudo ./install.sh
 ```
 
 The installer will **automatically**:
-1. ✅ Install Go 1.23.0 if not present (or upgrade if too old)
-2. ✅ Install wget if needed
-3. ✅ Build the project from source
-4. ✅ Run interactive setup (port, admin credentials)
-5. ✅ Create and start systemd service
+1. Install Go 1.23.0 if not present (or upgrade if too old)
+2. Install wget if needed
+3. Build the project from source
+4. Run interactive setup (port, admin credentials)
+5. Create and start systemd service
 
 **No prerequisites required** - the script handles everything!
 
@@ -209,7 +209,7 @@ sudo ./uninstall.sh
 
 ---
 
-## 📖 Usage
+## Usage
 
 ### Monitoring
 - View real-time system metrics
@@ -249,9 +249,9 @@ sudo ./uninstall.sh
 1. Select a config file from the sidebar
 2. **RAW Mode**: Edit configuration as plain text
 3. **INTERACTIVE Mode** (when available):
-   - Toggle options on/off (adds/removes `#`)
-   - Change values in type-appropriate fields
-   - See real-time status (Enabled/Disabled)
+- Toggle options on/off (adds/removes `#`)
+- Change values in type-appropriate fields
+- See real-time status (Enabled/Disabled)
 4. Click "Save Changes"
 
 ### Users
@@ -267,19 +267,19 @@ sudo ./uninstall.sh
 
 ---
 
-## 🛠️ Configuration
+## Configuration
 
 ### Config File
 Location: `/etc/orbit/config.json`
 
 ```json
 {
-  "port": 3333,
-  "admin_username": "admin",
-  "admin_password_hash": "$2a$10$...",
-  "session_secret": "random-64-char-hex-string",
-  "public_url": "http://your-server:3333",
-  "first_login": false
+"port": 3333,
+"admin_username": "admin",
+"admin_password_hash": "$2a$10$...",
+"session_secret": "random-64-char-hex-string",
+"public_url": "http://your-server:3333",
+"first_login": false
 }
 ```
 
@@ -295,7 +295,7 @@ sudo systemctl start orbit
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend (Go)
 - **Router**: `gorilla/mux`
@@ -313,40 +313,40 @@ sudo systemctl start orbit
 ### Directory Structure
 ```
 orbit/
-├── cmd/
-│   └── setup/          # Interactive setup utility (orbit-setup)
-├── internal/
-│   ├── api/            # HTTP handlers (REST API endpoints)
-│   ├── auth/           # Authentication & rate limiting
-│   ├── config/         # Configuration management
-│   ├── configfiles/    # Config file editing (RAW + Interactive)
-│   ├── network/        # Network management (with validation)
-│   ├── packages/       # Package management (with validation)
-│   ├── services/       # Systemd services (with validation)
-│   ├── system/         # System metrics collection
-│   ├── users/          # User management (with validation)
-│   └── util/           # Utility functions (crypto, command execution)
-├── debian/             # Debian package structure
-│   ├── DEBIAN/         # Package metadata & maintainer scripts
-│   ├── lib/systemd/    # Systemd unit file
-│   └── usr/share/doc/  # Documentation & license
-├── web/                # Frontend assets (embedded)
-│   ├── index.html
-│   ├── style.css
-│   ├── app.js
-│   └── favicon.svg
-├── main.go             # Entry point
-├── Makefile
-├── install.sh          # Source installation script
-├── uninstall.sh        # Uninstallation script
-├── build-deb.sh        # Debian package builder
-├── build-apt-repo.sh   # APT repository generator
-└── README.md
+cmd/
+setup/ # Interactive setup utility (orbit-setup)
+internal/
+api/ # HTTP handlers (REST API endpoints)
+auth/ # Authentication & rate limiting
+config/ # Configuration management
+configfiles/ # Config file editing (RAW + Interactive)
+network/ # Network management (with validation)
+packages/ # Package management (with validation)
+services/ # Systemd services (with validation)
+system/ # System metrics collection
+users/ # User management (with validation)
+util/ # Utility functions (crypto, command execution)
+debian/ # Debian package structure
+DEBIAN/ # Package metadata & maintainer scripts
+lib/systemd/ # Systemd unit file
+usr/share/doc/ # Documentation & license
+web/ # Frontend assets (embedded)
+index.html
+style.css
+app.js
+favicon.svg
+main.go # Entry point
+Makefile
+install.sh # Source installation script
+uninstall.sh # Uninstallation script
+build-deb.sh # Debian package builder
+build-apt-repo.sh # APT repository generator
+README.md
 ```
 
 ---
 
-## 🔧 Development
+## Development
 
 ### Prerequisites
 - Go 1.21 or higher
@@ -371,7 +371,7 @@ make build
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Service Won't Start
 ```bash
@@ -408,7 +408,7 @@ sudo apt install netplan.io
 
 ---
 
-## 📝 Uninstallation
+## Uninstallation
 
 ```bash
 cd /orbit
@@ -423,7 +423,7 @@ This will:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please:
 1. Fork the repository
@@ -434,7 +434,7 @@ Contributions are welcome! Please:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
@@ -442,7 +442,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built with [Go](https://golang.org/)
 - Uses [Chart.js](https://www.chartjs.org/) for graphs
@@ -451,7 +451,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-## 📞 Support
+## Support
 
 - **Issues**: https://github.com/grosman-net/orbit/issues
 - **Releases**: https://github.com/grosman-net/orbit/releases
@@ -459,9 +459,9 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-## 🔖 Recent Releases
+## Recent Releases
 
-### v1.2.0 (2025-12-03) - RHEL Support & License Change 🎉
+### v1.2.0 (2025-12-03) - RHEL Support & License Change
 - **NEW**: Full RHEL/CentOS/Rocky Linux support with native RPM packages
 - **NEW**: Apache License 2.0 (switched from MIT)
 - Added `build-rpm.sh` script for building RPM packages
@@ -482,7 +482,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 - Enhanced input validation in user management
 - **[Release Notes](https://github.com/grosman-net/orbit/releases/tag/v1.1.2)**
 
-### v1.1.1 (2025-11-11) - Critical Security Fixes 🔒
+### v1.1.1 (2025-11-11) - Critical Security Fixes
 - Fixed 3 critical command injection vulnerabilities
 - Added rate limiting on login endpoint
 - Enhanced session security
@@ -498,4 +498,4 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-**Made with ❤️ for system administrators**
+**Made with for system administrators**

@@ -26,12 +26,12 @@ func main() {
 	cfg.AdminUsername = promptStringOrDefault("Admin username (password will be same as username)", "admin")
 	password := cfg.AdminUsername // Username = Password by default
 
-	fmt.Printf("✓ Username: %s (default password: %s)\n", cfg.AdminUsername, cfg.AdminUsername)
+fmt.Printf("OK Username: %s (default password: %s)\n", cfg.AdminUsername, cfg.AdminUsername)
 	fmt.Println("  You can change the password after first login via web panel")
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		fmt.Printf("Failed to hash password: %v\n", err)
+fmt.Printf("Failed to hash password: %v\n", err)
 		os.Exit(1)
 	}
 	cfg.AdminPasswordHash = string(hash)
@@ -49,35 +49,35 @@ func main() {
 	// Ensure config directory exists
 	configDir := "/etc/orbit"
 	if err := os.MkdirAll(configDir, 0755); err != nil {
-		fmt.Printf("Warning: Could not create %s: %v\n", configDir, err)
+fmt.Printf("Warning: Could not create %s: %v\n", configDir, err)
 		fmt.Println("Saving to local config.json instead")
 		configPath := "config.json"
 		if err := saveConfig(&cfg, configPath); err != nil {
-			fmt.Printf("Failed to save config: %v\n", err)
+fmt.Printf("Failed to save config: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("\nConfiguration saved to: %s\n", configPath)
+fmt.Printf("\nConfiguration saved to: %s\n", configPath)
 		fmt.Println("Move it to /etc/orbit/config.json with sudo if needed.")
 		return
 	}
 
 	configPath := "/etc/orbit/config.json"
 	if err := saveConfig(&cfg, configPath); err != nil {
-		fmt.Printf("Failed to save config: %v\n", err)
+fmt.Printf("Failed to save config: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n✅ Configuration saved!\n\n")
-	fmt.Printf("═══════════════════════════════════════════\n")
-	fmt.Printf("  Panel URL: %s\n", cfg.PublicURL)
-	fmt.Printf("  Username:  %s\n", cfg.AdminUsername)
-	fmt.Printf("  Password:  %s (change after first login)\n", cfg.AdminUsername)
-	fmt.Printf("═══════════════════════════════════════════\n")
+fmt.Printf("\n Configuration saved!\n\n")
+fmt.Printf("---------------------------\n")
+fmt.Printf(" Panel URL: %s\n", cfg.PublicURL)
+fmt.Printf(" Username: %s\n", cfg.AdminUsername)
+fmt.Printf(" Password: %s (change after first login)\n", cfg.AdminUsername)
+fmt.Printf("---------------------------\n")
 }
 
 func promptStringOrDefault(prompt, defaultValue string) string {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("%s [%s]: ", prompt, defaultValue)
+fmt.Printf("%s [%s]: ", prompt, defaultValue)
 	input, _ := reader.ReadString('\n')
 	input = strings.TrimSpace(input)
 	if input == "" {
@@ -89,7 +89,7 @@ func promptStringOrDefault(prompt, defaultValue string) string {
 func promptInt(prompt string, defaultValue int) int {
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Printf("%s [%d]: ", prompt, defaultValue)
+fmt.Printf("%s [%d]: ", prompt, defaultValue)
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
 		if input == "" {
@@ -111,4 +111,3 @@ func saveConfig(cfg *config.Config, path string) error {
 	}
 	return os.WriteFile(path, data, 0600)
 }
-

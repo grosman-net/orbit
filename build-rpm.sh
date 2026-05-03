@@ -12,9 +12,9 @@ echo "Building Orbit v${VERSION} RPM package for ${ARCH}..."
 
 # Check if rpmbuild is available
 if ! command -v rpmbuild &> /dev/null; then
-    echo "❌ rpmbuild is not installed"
-    echo "   Install with: sudo yum install rpm-build rpmdevtools"
-    echo "   Or: sudo dnf install rpm-build rpmdevtools"
+echo "rpmbuild is not installed"
+echo " Install with: sudo yum install rpm-build rpmdevtools"
+echo " Or: sudo dnf install rpm-build rpmdevtools"
     exit 1
 fi
 
@@ -51,7 +51,7 @@ elif [ "$ARCH" = "x86_64" ]; then
     RPM_ARCH="x86_64"
     GOARCH="amd64"
 else
-    echo "Unsupported architecture: $ARCH"
+echo "Unsupported architecture: $ARCH"
     exit 1
 fi
 
@@ -67,7 +67,7 @@ rpmbuild \
 # Find and copy built RPM
 RPM_FILE=$(find ${BUILD_DIR}/RPMS -name "orbit-${VERSION}*.rpm" | head -1)
 if [ -z "$RPM_FILE" ]; then
-    echo "❌ RPM file not found"
+echo "RPM file not found"
     exit 1
 fi
 
@@ -77,16 +77,15 @@ cp ${RPM_FILE} dist/
 
 RPM_NAME=$(basename ${RPM_FILE})
 echo ""
-echo "✅ RPM package built successfully!"
-echo "   📦 dist/${RPM_NAME}"
+echo " RPM package built successfully!"
+echo " dist/${RPM_NAME}"
 echo ""
 echo "Install with:"
-echo "   sudo rpm -ivh dist/${RPM_NAME}"
-echo "   # or"
-echo "   sudo yum localinstall dist/${RPM_NAME}"
-echo "   # or"
-echo "   sudo dnf localinstall dist/${RPM_NAME}"
+echo " sudo rpm -ivh dist/${RPM_NAME}"
+echo " # or"
+echo " sudo yum localinstall dist/${RPM_NAME}"
+echo " # or"
+echo " sudo dnf localinstall dist/${RPM_NAME}"
 echo ""
 echo "Package info:"
 rpm -qip dist/${RPM_NAME}
-

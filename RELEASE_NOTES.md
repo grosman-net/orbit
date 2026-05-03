@@ -6,11 +6,11 @@ This file contains release notes for all versions of Orbit.
 
 ## v1.2.0 - RHEL Support & License Change (2025-12-03)
 
-**Type**: Minor Release (New Features)  
-**Platform**: Ubuntu 20.04+ / Debian 11+ / RHEL 8+ / CentOS 8+ / Rocky Linux 8+ / AlmaLinux 8+  
+**Type**: Minor Release (New Features)
+**Platform**: Ubuntu 20.04+ / Debian 11+ / RHEL 8+ / CentOS 8+ / Rocky Linux 8+ / AlmaLinux 8+
 **Architecture**: amd64 (x86_64), arm64 (aarch64)
 
-### 🎉 New Features
+### New Features
 
 **1. RHEL/CentOS/Rocky Linux Support**
 - **Native RPM Packages**: Full support for RHEL-based distributions
@@ -24,7 +24,7 @@ This file contains release notes for all versions of Orbit.
 - **Benefits**: Better patent protection, clearer contribution guidelines
 - **Updated**: All license references, copyright notices, and package metadata
 
-### 📦 Package Formats
+### Package Formats
 
 **DEB Packages** (Ubuntu/Debian):
 - `orbit_1.2.0_amd64.deb`
@@ -34,7 +34,7 @@ This file contains release notes for all versions of Orbit.
 - `orbit-1.2.0-1.el8.x86_64.rpm`
 - `orbit-1.2.0-1.el8.aarch64.rpm`
 
-### ⬆️ Upgrade Instructions
+### Upgrade Instructions
 
 **Ubuntu/Debian (via APT):**
 ```bash
@@ -55,16 +55,16 @@ sudo rpm -ivh orbit-1.2.0-1.el8.x86_64.rpm
 sudo yum localinstall orbit-1.2.0-1.el8.x86_64.rpm
 ```
 
-### 📊 Summary
+### Summary
 
 | Category | Added |
-|----------|-------|
-| New Platforms | 4 ✅ (RHEL, CentOS, Rocky, AlmaLinux) |
-| Package Formats | 1 ✅ (RPM) |
-| License | 1 ✅ (Apache 2.0) |
-| **Total** | **6** ✅ |
+|------|-----|
+| New Platforms | 4 (RHEL, CentOS, Rocky, AlmaLinux) |
+| Package Formats | 1 (RPM) |
+| License | 1 (Apache 2.0) |
+| **Total** | **6** |
 
-### 🔧 Technical Details
+### Technical Details
 
 - Created `rpm/orbit.spec` for RPM package building
 - Created `rpm/orbit.service` systemd unit file for RHEL systems
@@ -72,12 +72,12 @@ sudo yum localinstall orbit-1.2.0-1.el8.x86_64.rpm
 - Updated version references throughout codebase to 1.2.0
 - Both DEB and RPM packages provide identical functionality
 
-### 📝 Files Added
+### Files Added
 - `rpm/orbit.spec` - RPM package specification
 - `rpm/orbit.service` - Systemd unit for RHEL systems
 - `build-rpm.sh` - RPM package build script
 
-### 📝 Files Modified
+### Files Modified
 - `LICENSE` - Changed to Apache 2.0
 - `README.md` - Updated platform support, license, installation methods
 - `CHANGELOG.md` - Added 1.2.0 release notes
@@ -88,11 +88,11 @@ sudo yum localinstall orbit-1.2.0-1.el8.x86_64.rpm
 
 ## v1.1.3 - Security & Reliability Fixes (2025-12-03)
 
-**Type**: Patch Release (Security & Bug Fixes)  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Patch Release (Security & Bug Fixes)
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### 🔒 Security Fixes
+### Security Fixes
 
 **1. Secure Session Cookies Based on Public URL**
 - Session cookies now automatically use `Secure=true` when Orbit is served over HTTPS
@@ -102,7 +102,7 @@ sudo yum localinstall orbit-1.2.0-1.el8.x86_64.rpm
 - `GenerateRandomString()` now fails fast (panic) if secure randomness cannot be obtained
 - Prevents silent degradation of session secret entropy
 
-### 🐛 Bug Fixes & Improvements
+### Bug Fixes & Improvements
 
 **3. Config Save Robustness on Read-Only Systems** (Fixes #6)
 - Fixed error: `open /etc/ssh/sshd_config.tmp: read-only file system`
@@ -117,16 +117,16 @@ sudo yum localinstall orbit-1.2.0-1.el8.x86_64.rpm
 - Better error messages throughout the codebase
 - More user-friendly feedback for common errors
 
-### 📊 Summary
+### Summary
 
 | Category | Fixed |
-|----------|-------|
-| Security Issues | 2 ✅ |
-| GitHub Issues | 2 ✅ (#6, #7) |
-| Error Handling | 3 ✅ |
-| **Total** | **7** ✅ |
+|------|-----|
+| Security Issues | 2 |
+| GitHub Issues | 2 (#6, #7) |
+| Error Handling | 3 |
+| **Total** | **7** |
 
-### ⬆️ Upgrade Instructions
+### Upgrade Instructions
 
 **Via APT:**
 ```bash
@@ -145,11 +145,11 @@ sudo dpkg -i orbit_1.1.3_amd64.deb
 
 ## v1.1.2 - Bug Fixes (2025-11-11)
 
-**Type**: Patch Release (Bug Fixes)  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Patch Release (Bug Fixes)
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### 🐛 Bug Fixes
+### Bug Fixes
 
 **1. handleLogs() - Missing Unit Parameter Validation**
 - **Issue:** API endpoint didn't validate that `unit` parameter was provided
@@ -161,7 +161,7 @@ sudo dpkg -i orbit_1.1.3_amd64.deb
 - **Impact:** Could request negative lines (invalid) or cause DoS with huge numbers (e.g., 999999999)
 - **Fix:** Added range validation (1-10000 lines), invalid values use default (50)
 
-**3. Session Cookie Issue on Reinstall** 🔥
+**3. Session Cookie Issue on Reinstall**
 - **Issue:** After reinstalling Orbit with new config, old session cookies caused authentication errors
 - **Impact:** Users had to manually clear browser cookies to log in after reinstall
 - **User Report:** "при переустановке орбита приходится куки удалять чтобы войти"
@@ -172,16 +172,16 @@ sudo dpkg -i orbit_1.1.3_amd64.deb
 - **Impact:** Could attempt to check lock status for invalid/malicious usernames
 - **Fix:** Added username validation before executing command
 
-### 📊 Summary
+### Summary
 
 | Category | Found | Fixed |
-|----------|-------|-------|
-| API Validation Bugs | 2 | 2 ✅ |
-| Session Management | 1 | 1 ✅ |
-| User Management | 1 | 1 ✅ |
-| **Total Bugs** | **4** | **4 ✅** |
+|------|-----|-----|
+| API Validation Bugs | 2 | 2 |
+| Session Management | 1 | 1 |
+| User Management | 1 | 1 |
+| **Total Bugs** | **4** | **4 ** |
 
-### ⬆️ Upgrade Instructions
+### Upgrade Instructions
 
 **Via APT (Recommended):**
 ```bash
@@ -195,32 +195,32 @@ wget https://github.com/grosman-net/orbit/releases/download/v1.1.2/orbit_1.1.2_a
 sudo dpkg -i orbit_1.1.2_amd64.deb
 ```
 
-**Note:** After upgrading, you can now log in immediately without clearing cookies! 🎉
+**Note:** After upgrading, you can now log in immediately without clearing cookies!
 
 ---
 
 ## v1.1.1 - Critical Security Fixes (2025-11-11)
 
-**Type**: Security Release (Critical)  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Security Release (Critical)
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### ⚠️ **SECURITY ADVISORY**
+### WARNING: **SECURITY ADVISORY**
 
 This release fixes **3 critical command injection vulnerabilities** and **3 bugs**. **Immediate upgrade is strongly recommended.**
 
-### 🔒 Security Fixes
+### Security Fixes
 
 #### CRITICAL: Command Injection Vulnerabilities (HIGH)
 
 **1. Network & Firewall Operations**
 - **Risk:** Remote code execution via crafted network parameters
 - **Fixed Functions:**
-  - `AllowPort`, `DenyPort`, `DeleteRule` - Firewall management
-  - `SetInterfaceUp/Down` - Interface control
-  - `AddIPAddress`, `DeleteIPAddress` - IP configuration
-  - `AddRoute`, `DeleteRoute` - Routing table
-  - `SaveInterfaceConfig`, `DeleteInterfaceConfig` - Persistent config
+- `AllowPort`, `DenyPort`, `DeleteRule` - Firewall management
+- `SetInterfaceUp/Down` - Interface control
+- `AddIPAddress`, `DeleteIPAddress` - IP configuration
+- `AddRoute`, `DeleteRoute` - Routing table
+- `SaveInterfaceConfig`, `DeleteInterfaceConfig` - Persistent config
 - **Impact:** Malicious input like `"80; rm -rf /"` could execute arbitrary commands
 - **Fix:** Added validation functions (isValidInterfaceName, isValidPort, isValidProtocol, etc.)
 
@@ -245,7 +245,7 @@ This release fixes **3 critical command injection vulnerabilities** and **3 bugs
 - **Issue:** Session secret could be too short if misconfigured
 - **Fix:** Enforced minimum 32-byte session secret with auto-padding
 
-### 🐛 Bug Fixes
+### Bug Fixes
 
 **1. services.GetLogs() - Int to String Conversion**
 - **Was:** `string(rune(50))` → "2" (wrong!)
@@ -262,17 +262,17 @@ This release fixes **3 critical command injection vulnerabilities** and **3 bugs
 - **Fix:** Now returns 400 Bad Request on malformed input
 - **Impact:** Better error messages for API consumers
 
-### 📊 Security Audit Summary
+### Security Audit Summary
 
 | Category | Found | Fixed |
-|----------|-------|-------|
-| Critical Vulnerabilities | 3 | 3 ✅ |
-| Medium Vulnerabilities | 1 | 1 ✅ |
-| Low Vulnerabilities | 1 | 1 ✅ |
-| Bugs | 3 | 3 ✅ |
-| **Total Issues** | **8** | **8 ✅** |
+|------|-----|-----|
+| Critical Vulnerabilities | 3 | 3 |
+| Medium Vulnerabilities | 1 | 1 |
+| Low Vulnerabilities | 1 | 1 |
+| Bugs | 3 | 3 |
+| **Total Issues** | **8** | **8 ** |
 
-### ⬆️ Upgrade Instructions
+### Upgrade Instructions
 
 **Via APT (Recommended):**
 ```bash
@@ -291,7 +291,7 @@ sudo dpkg -i orbit_1.1.1_amd64.deb
 curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash
 ```
 
-### 📚 Documentation
+### Documentation
 
 - Full audit report: `SECURITY_FIXES_v1.1.1.md`
 - Changelog: `CHANGELOG.md`
@@ -300,13 +300,13 @@ curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash
 
 ## v1.1.0 - APT Repository Support (2025-11-10)
 
-**Type**: Minor Release (Feature)  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Minor Release (Feature)
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### ✨ What's New
+### What's New
 
-#### 📦 APT Repository Installation
+#### APT Repository Installation
 
 **One-line install:**
 ```bash
@@ -316,12 +316,12 @@ curl -fsSL https://grosman-net.github.io/orbit/install-orbitctl.sh | sudo bash
 **Or manually:**
 ```bash
 echo 'deb [trusted=yes] https://grosman-net.github.io/orbit stable main' | \
-  sudo tee /etc/apt/sources.list.d/orbitctl.list
+sudo tee /etc/apt/sources.list.d/orbitctl.list
 sudo apt update
 sudo apt install orbitctl
 ```
 
-#### 🎯 Features
+#### Features
 
 - Full APT repository hosted on GitHub Pages
 - Automatic updates via `apt upgrade`
@@ -329,7 +329,7 @@ sudo apt install orbitctl
 - Interactive installation (prompts for port and username)
 - Automatic service start after installation
 
-#### 🔧 Technical Details
+#### Technical Details
 
 - Package name: `orbit` (provides: `orbitctl`)
 - APT repository: https://grosman-net.github.io/orbit
@@ -340,17 +340,17 @@ sudo apt install orbitctl
 
 ## v1.0.6 - Debian Package Support (2025-11-10)
 
-**Type**: Minor Release (Feature)  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Minor Release (Feature)
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### 🎉 Major Feature: Debian Package (.deb) Support
+### Major Feature: Debian Package (.deb) Support
 
 Orbit can now be installed as a native Debian package!
 
-### ✨ What's New
+### What's New
 
-#### 📦 .deb Package Installation
+#### .deb Package Installation
 
 ```bash
 # Download
@@ -367,24 +367,24 @@ sudo systemctl enable orbit
 sudo systemctl start orbit
 ```
 
-#### 🎯 Features
+#### Features
 
 - **Native Package Manager Integration**: Use standard Debian tools
 - **Automatic Dependency Handling**: systemd automatically required
 - **Clean Uninstall**:
-  - `sudo dpkg -r orbit` - removes package, keeps config
-  - `sudo dpkg -P orbit` - complete removal including config
+- `sudo dpkg -r orbit` - removes package, keeps config
+- `sudo dpkg -P orbit` - complete removal including config
 - **Systemd Integration**: Service unit installed automatically
 - **Maintainer Scripts**: Proper pre/post install/remove hooks
 
-#### 📊 Package Information
+#### Package Information
 
 | Architecture | Size | Checksum (SHA256) |
-|-------------|------|-------------------|
+|---------|----|-------------|
 | **amd64** | 2.3M | `a897369f936a52e3cea7f63e6b334efd47ee2a54d5137a29762058acdd4a9680` |
 | **arm64** | 2.0M | `65f1eebdb40d7cfe19dca84e8271c281ae6d7d6baf16c57207848305b3beb982` |
 
-### 🔧 Technical Details
+### Technical Details
 
 **Package Contents**:
 - `/usr/local/bin/orbit` - main binary
@@ -397,7 +397,7 @@ sudo systemctl start orbit
 - `prerm` - stops and disables service before removal
 - `postrm` - cleans up config on purge
 
-### 📥 Installation Methods
+### Installation Methods
 
 #### Option 1: .deb Package (Recommended)
 
@@ -426,7 +426,7 @@ cd orbit-1.0.6-linux-amd64
 sudo ./install.sh
 ```
 
-### 🔄 Upgrade from v1.0.5
+### Upgrade from v1.0.5
 
 **If installed from source**:
 ```bash
@@ -450,14 +450,14 @@ sudo systemctl enable orbit
 sudo systemctl start orbit
 ```
 
-### 🚀 Future Plans
+### Future Plans
 
 This .deb package is the foundation for:
 - **APT Repository**: Coming soon - `apt install orbit`
 - **Automatic Updates**: Through APT
 - **PPA Support**: For easier distribution
 
-### 📋 All Checksums
+### All Checksums
 
 ```
 orbit-1.0.6-linux-amd64.tar.gz: 23078688d2083430391b42019177e63be2d0256f114d3c667aae59115d617747
@@ -470,11 +470,11 @@ orbit_1.0.6_arm64.deb: 65f1eebdb40d7cfe19dca84e8271c281ae6d7d6baf16c57207848305b
 
 ## v1.0.5 - Installation Upgrade Fix (2025-11-10)
 
-**Type**: Patch Release (Bugfix)  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Patch Release (Bugfix)
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### 🐛 Fixed
+### Fixed
 
 **"Text file busy" Error on Upgrade**
 
@@ -494,7 +494,7 @@ cp: cannot create regular file '/usr/local/bin/orbit': Text file busy
 git clone https://github.com/grosman-net/orbit.git
 cd orbit
 sudo ./install.sh
-# ✅ Now works perfectly for both fresh installs AND upgrades
+# Now works perfectly for both fresh installs AND upgrades
 ```
 
 ### What Changed
@@ -502,16 +502,16 @@ sudo ./install.sh
 **Before (v1.0.4)**:
 ```bash
 sudo ./install.sh
-# ❌ Error: Text file busy (if orbit service was running)
+# ERROR: Error: Text file busy (if orbit service was running)
 ```
 
 **After (v1.0.5)**:
 ```bash
 sudo ./install.sh
-# ✅ Automatically stops service
-# ✅ Replaces binaries
-# ✅ Restarts service
-# ✅ Success!
+# Automatically stops service
+# Replaces binaries
+# Restarts service
+# Success!
 ```
 
 ### Upgrade from v1.0.4
@@ -522,35 +522,35 @@ Simply pull and install:
 cd /path/to/orbit
 git pull origin main
 sudo ./install.sh
-# ✅ Works now!
+# Works now!
 ```
 
 ---
 
 ## v1.0.4 - First Login Password Change (2025-11-10)
 
-**Type**: Minor Release (Feature Enhancement)  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Minor Release (Feature Enhancement)
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### 🎯 What's New
+### What's New
 
 **Mandatory Password Change on First Login** - Enhanced security with forced password change
 
 ### Features
 
-#### 🔐 First Login Password Change
-- ✅ **Default credentials**: Username = Password (e.g., `admin:admin`)
-- ✅ **Mandatory change**: Modal appears on first login forcing password change
-- ✅ **Persistent flag**: `first_login` in config.json tracks status
-- ✅ **Secure flow**: Cannot access panel until password is changed
-- ✅ **User-friendly**: Clear instructions like Grafana default password flow
+#### First Login Password Change
+- **Default credentials**: Username = Password (e.g., `admin:admin`)
+- **Mandatory change**: Modal appears on first login forcing password change
+- **Persistent flag**: `first_login` in config.json tracks status
+- **Secure flow**: Cannot access panel until password is changed
+- **User-friendly**: Clear instructions like Grafana default password flow
 
-#### 📋 API Endpoints
+#### API Endpoints
 - `GET /api/auth/first-login` - Check if first login
 - `POST /api/auth/change-password` - Change password
 
-#### 🎨 UI Improvements
+#### UI Improvements
 - Beautiful modal with blur backdrop
 - Password validation (min 4 chars, must match)
 - Cannot close modal on forced change
@@ -558,11 +558,11 @@ sudo ./install.sh
 
 ### Fixed Bugs
 
-1. ✅ **main.go**: Port flag now defaults to 0, only overrides config if explicitly set
-2. ✅ **main.go**: Removed Default() config fallback, now exits if config missing
-3. ✅ **util.go**: Fixed GenerateRandomString entropy (was half, now full)
-4. ✅ **install.sh**: Removed hardcoded `--port 3333` from systemd unit
-5. ✅ **cmd/setup**: Removed TrimSpace from password input to prevent mismatches
+1. **main.go**: Port flag now defaults to 0, only overrides config if explicitly set
+2. **main.go**: Removed Default() config fallback, now exits if config missing
+3. **util.go**: Fixed GenerateRandomString entropy (was half, now full)
+4. **install.sh**: Removed hardcoded `--port 3333` from systemd unit
+5. **cmd/setup**: Removed TrimSpace from password input to prevent mismatches
 
 ### Installation
 
@@ -599,9 +599,9 @@ sudo systemctl start orbit
 
 ### Fixed
 
-- ✅ Critical bug in `install.sh` where Go installation left script in `/tmp`
-- ✅ Build failure: "go.mod file not found" error
-- ✅ Directory context lost after automatic Go installation
+- Critical bug in `install.sh` where Go installation left script in `/tmp`
+- Build failure: "go.mod file not found" error
+- Directory context lost after automatic Go installation
 
 ### Technical Changes
 
@@ -619,11 +619,11 @@ sudo systemctl start orbit
 
 ### Added
 
-- 📥 **Automatic Go 1.23.0 installation** if not present
-- 🔄 **Automatic Go upgrade** if existing version < 1.21
-- 🛠️ **Automatic wget installation** if missing
-- 🔧 **Automatic PATH configuration** in `/etc/profile` and `~/.bashrc`
-- ✅ **Zero manual steps** required
+- **Automatic Go 1.23.0 installation** if not present
+- **Automatic Go upgrade** if existing version < 1.21
+- **Automatic wget installation** if missing
+- **Automatic PATH configuration** in `/etc/profile` and `~/.bashrc`
+- **Zero manual steps** required
 
 ### Changed
 
@@ -640,10 +640,10 @@ sudo systemctl start orbit
 
 ### Fixed
 
-- ✅ Archive structure: Now extracts to proper directory `orbit-1.0.1-linux-amd64/`
-- ✅ Binary names normalized: `orbit` and `orbit-setup`
-- ✅ `install.sh` correctly locates and installs binaries
-- ✅ All files have correct permissions (chmod +x)
+- Archive structure: Now extracts to proper directory `orbit-1.0.1-linux-amd64/`
+- Binary names normalized: `orbit` and `orbit-setup`
+- `install.sh` correctly locates and installs binaries
+- All files have correct permissions (chmod +x)
 
 **Problem in v1.0.0**: Archives extracted files directly into current directory causing installation failures.
 
@@ -651,15 +651,15 @@ sudo systemctl start orbit
 
 ## v1.0.0 - First Stable Release (2025-11-10)
 
-**Type**: Major Release  
-**Platform**: Ubuntu 20.04+ / Debian 11+  
+**Type**: Major Release
+**Platform**: Ubuntu 20.04+ / Debian 11+
 **Architecture**: amd64, arm64
 
-### 🌟 Highlights
+### Highlights
 
 Orbit is a modern, lightweight server management panel built with Go. This first stable release provides a complete set of tools for managing Ubuntu/Debian servers through an intuitive web interface.
 
-### ✨ Key Features
+### Key Features
 
 - **Real-time System Monitoring** with interactive charts
 - **Package Management** (APT) - install, remove, update
@@ -670,7 +670,7 @@ Orbit is a modern, lightweight server management panel built with Go. This first
 - **System Logs Viewer** with filtering
 - **Secure Authentication** with bcrypt + sessions
 
-### 🎨 Modern UI
+### Modern UI
 
 - Dark theme with glassmorphism effects
 - Mint-emerald gradient accents
@@ -678,14 +678,14 @@ Orbit is a modern, lightweight server management panel built with Go. This first
 - Real-time charts with Chart.js
 - Smooth animations and transitions
 
-### 🔒 Security
+### Security
 
-- ✅ Fixed shell injection vulnerability in netplan config generation
-- ✅ Added input validation for interface names and package names
-- ✅ Implemented proper file writing instead of shell commands
-- ✅ Added data validation for all API responses
+- Fixed shell injection vulnerability in netplan config generation
+- Added input validation for interface names and package names
+- Implemented proper file writing instead of shell commands
+- Added data validation for all API responses
 
-### 📋 Requirements
+### Requirements
 
 **System**:
 - Ubuntu 20.04 LTS or newer
@@ -699,7 +699,7 @@ Orbit is a modern, lightweight server management panel built with Go. This first
 - APT package manager
 - netplan (for persistent network config)
 
-### 🚀 Roadmap
+### Roadmap
 
 **Planned for v1.1.0**:
 - RHEL/CentOS/Rocky Linux support
@@ -717,7 +717,7 @@ Orbit is a modern, lightweight server management panel built with Go. This first
 
 ---
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
@@ -725,9 +725,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Thank You
+## Thank You
 
 Thank you to everyone who tested and provided feedback during development!
 
-**Made with ❤️ for system administrators**
-
+**Made with for system administrators**
