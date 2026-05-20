@@ -12,7 +12,7 @@ cd "$ROOT"
 
 rm -rf "$WORKTREE"
 git fetch origin gh-pages
-git worktree add "$WORKTREE" origin/gh-pages
+git worktree add -B gh-pages "$WORKTREE" origin/gh-pages
 
 # Keep landing page, replace repo metadata
 find "$WORKTREE" -mindepth 1 -maxdepth 1 ! -name 'index.html' -exec rm -rf {} +
@@ -30,4 +30,5 @@ else
 fi
 
 cd "$ROOT"
-git worktree remove "$WORKTREE" --force
+git worktree remove "$WORKTREE" --force 2>/dev/null || rm -rf "$WORKTREE"
+git worktree prune

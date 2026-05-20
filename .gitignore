@@ -24,6 +24,9 @@ config.json
 .env.production
 .env.*.local
 
+# Publish worktree
+.gh-pages-worktree/
+
 # Build output and generated package artifacts
 dist/
 build/
