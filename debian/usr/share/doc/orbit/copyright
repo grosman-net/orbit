@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: orbit
+Source: https://github.com/grosman-net/orbit
+
+Files: *
+Copyright: grosman-net
+License: Apache-2.0
+ Please see /usr/share/common-licenses/Apache-2.0.

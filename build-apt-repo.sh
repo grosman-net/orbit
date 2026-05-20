@@ -67,7 +67,7 @@ done >> dists/${DIST}/Release
 cd ..
 
 echo ""
-echo " APT repository built successfully!"
+echo "APT repository built: ${REPO_DIR}/"
 echo " Repository: ${REPO_DIR}/"
 echo ""
 echo "Directory structure:"

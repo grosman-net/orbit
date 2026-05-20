@@ -4,7 +4,7 @@
 
 set -e
 
-VERSION="${1:-1.0.4}"
+VERSION="${1:-1.2.1}"
 DIST_DIR="dist"
 
 echo "Building Orbit v${VERSION} for release..."
@@ -86,7 +86,12 @@ echo ""
 echo "All release artifacts:"
 ls -lh ${DIST_DIR}/
 
-# Generate checksums
+# Remove intermediate binaries (tarballs and debs are the release artifacts)
+rm -f ${DIST_DIR}/orbit-amd64 ${DIST_DIR}/orbit-arm64
+rm -f ${DIST_DIR}/orbit-setup-amd64 ${DIST_DIR}/orbit-setup-arm64
+rm -rf ${DIST_DIR}/web
+cp install.sh uninstall.sh README.md LICENSE CHANGELOG.md ${DIST_DIR}/ 2>/dev/null || true
+
 echo ""
 echo "Generating checksums..."
 cd ${DIST_DIR}
@@ -94,6 +99,8 @@ sha256sum *.tar.gz *.deb > SHA256SUMS
 cd ..
 
 echo ""
-echo "SHA256 Checksums:"
+echo "Release artifacts:"
+ls -lh ${DIST_DIR}/
+echo ""
 cat ${DIST_DIR}/SHA256SUMS
 

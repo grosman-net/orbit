@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="${1:-1.0.5}"
+VERSION="${1:-1.2.1}"
 ARCH="${2:-amd64}"
 BUILD_DIR="build-deb"
 
@@ -77,7 +77,7 @@ mkdir -p dist
 mv ${BUILD_DIR}/orbit_${VERSION}_${ARCH}.deb dist/
 
 echo ""
-echo " Package built successfully!"
+echo "Package built successfully."
 echo " dist/orbit_${VERSION}_${ARCH}.deb"
 echo ""
 echo "Install with:"

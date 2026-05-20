@@ -1,6 +1,8 @@
 # Binaries for programs and plugins
-orbit
-orbit-setup
+/orbit
+/orbit-setup
+orbit-linux-*
+orbit-setup-linux-*
 *.exe
 *.exe~
 *.dll

@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [ go-rewrite, main ]
+    branches: [ main ]
   pull_request:
-    branches: [ go-rewrite, main ]
+    branches: [ main ]
 
 jobs:
   test:
