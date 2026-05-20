@@ -29,7 +29,7 @@ elif [ "$ARCH" = "arm64" ]; then
     GOARCH=arm64 go build -o ${PKG_DIR}/usr/local/bin/orbit -ldflags="-s -w -X main.Version=${VERSION}" .
     GOARCH=arm64 go build -o ${PKG_DIR}/usr/local/bin/orbit-setup -ldflags="-s -w" ./cmd/setup
 else
-    echo "Unsupported architecture: $ARCH"
+echo "Unsupported architecture: $ARCH"
     exit 1
 fi
 
@@ -77,13 +77,12 @@ mkdir -p dist
 mv ${BUILD_DIR}/orbit_${VERSION}_${ARCH}.deb dist/
 
 echo ""
-echo "✅ Package built successfully!"
-echo "   📦 dist/orbit_${VERSION}_${ARCH}.deb"
+echo " Package built successfully!"
+echo " dist/orbit_${VERSION}_${ARCH}.deb"
 echo ""
 echo "Install with:"
-echo "   sudo dpkg -i dist/orbit_${VERSION}_${ARCH}.deb"
-echo "   sudo apt-get install -f  # if there are dependency issues"
+echo " sudo dpkg -i dist/orbit_${VERSION}_${ARCH}.deb"
+echo " sudo apt-get install -f # if there are dependency issues"
 echo ""
 echo "Package info:"
 dpkg-deb --info dist/orbit_${VERSION}_${ARCH}.deb
-

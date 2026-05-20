@@ -1,10 +1,10 @@
 # Security Audit and Bug Fixes - v1.1.1
 
-## 🔒 Security Vulnerabilities Fixed
+## Security Vulnerabilities Fixed
 
 ### 1. **CRITICAL: Command Injection in Network/Firewall Operations**
 
-**Risk Level:** HIGH  
+**Risk Level:** HIGH
 **CVE:** N/A (Internal discovery)
 
 **Affected Functions:**
@@ -136,7 +136,7 @@ Session secret could theoretically be too short if misconfigured.
 
 ---
 
-## 🐛 Bugs Fixed
+## Bugs Fixed
 
 ### Bug #1: Incorrect Integer to String Conversion in GetLogs()
 
@@ -144,13 +144,13 @@ Session secret could theoretically be too short if misconfigured.
 
 **Issue:**
 ```go
-linesStr = string(rune(lines))  // ❌ WRONG!
+linesStr = string(rune(lines)) // ERROR: WRONG!
 // string(rune(50)) = "2" (Unicode character 50)
 ```
 
 **Fix:**
 ```go
-linesStr = fmt.Sprintf("%d", lines)  // ✅ CORRECT
+linesStr = fmt.Sprintf("%d", lines) // CORRECT
 // fmt.Sprintf("%d", 50) = "50"
 ```
 
@@ -175,7 +175,7 @@ Password was never actually set because stdin wasn't piped to chpasswd.
 cmd := exec.Command("sudo", "-n", "chpasswd")
 cmd.Stdin = bytes.NewBufferString(username + ":" + password)
 if err := cmd.Run(); err != nil {
-    return fmt.Errorf("failed to set password: %v", err)
+return fmt.Errorf("failed to set password: %v", err)
 }
 ```
 
@@ -189,14 +189,14 @@ if err := cmd.Run(); err != nil {
 
 **Issue:**
 ```go
-json.NewDecoder(r.Body).Decode(&req)  // Error ignored!
+json.NewDecoder(r.Body).Decode(&req) // Error ignored!
 ```
 
 **Fix:**
 ```go
 if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-    h.writeError(w, "Invalid request", http.StatusBadRequest)
-    return
+h.writeError(w, "Invalid request", http.StatusBadRequest)
+return
 }
 ```
 
@@ -204,32 +204,32 @@ if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 
 ---
 
-## 📊 Security Audit Summary
+## Security Audit Summary
 
 | Category | Found | Fixed |
-|----------|-------|-------|
-| **Critical Vulnerabilities** | 3 | 3 ✅ |
-| **Medium Vulnerabilities** | 1 | 1 ✅ |
-| **Low Vulnerabilities** | 1 | 1 ✅ |
-| **Bugs** | 3 | 3 ✅ |
-| **Total Issues** | **8** | **8** ✅ |
+|------|-----|-----|
+| **Critical Vulnerabilities** | 3 | 3 |
+| **Medium Vulnerabilities** | 1 | 1 |
+| **Low Vulnerabilities** | 1 | 1 |
+| **Bugs** | 3 | 3 |
+| **Total Issues** | **8** | **8** |
 
 ---
 
-## 🛡️ Security Best Practices Implemented
+## Security Best Practices Implemented
 
-1. ✅ **Input Validation** - All user inputs validated before shell execution
-2. ✅ **Rate Limiting** - Login brute-force protection
-3. ✅ **Session Security** - Strong session secrets (64 chars, crypto/rand)
-4. ✅ **HTTP-Only Cookies** - Session cookies not accessible via JavaScript
-5. ✅ **Bcrypt Password Hashing** - Strong password hashing (DefaultCost = 10)
-6. ✅ **Command Sanitization** - No shell metacharacters allowed in inputs
-7. ✅ **File Permission Security** - Config files saved with 0600 permissions
-8. ✅ **Stdin Piping** - Passwords piped through stdin, not command line
+1. **Input Validation** - All user inputs validated before shell execution
+2. **Rate Limiting** - Login brute-force protection
+3. **Session Security** - Strong session secrets (64 chars, crypto/rand)
+4. **HTTP-Only Cookies** - Session cookies not accessible via JavaScript
+5. **Bcrypt Password Hashing** - Strong password hashing (DefaultCost = 10)
+6. **Command Sanitization** - No shell metacharacters allowed in inputs
+7. **File Permission Security** - Config files saved with 0600 permissions
+8. **Stdin Piping** - Passwords piped through stdin, not command line
 
 ---
 
-## 🔄 Files Modified
+## Files Modified
 
 ### Security Fixes:
 - `internal/network/network.go` - Added validation for all network operations
@@ -246,21 +246,21 @@ if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 
 ---
 
-## 🧪 Testing Recommendations
+## Testing Recommendations
 
 ### Security Testing:
 ```bash
 # Test command injection prevention
 curl -X POST http://localhost:3333/api/network/firewall/allow \
-  -H "Content-Type: application/json" \
-  -d '{"port":"80; rm -rf /","protocol":"tcp"}'
+-H "Content-Type: application/json" \
+-d '{"port":"80; rm -rf /","protocol":"tcp"}'
 # Expected: {"error":"invalid port: 80; rm -rf /"}
 
 # Test rate limiting
 for i in {1..6}; do
-  curl -X POST http://localhost:3333/api/auth/login \
-    -H "Content-Type: application/json" \
-    -d '{"username":"admin","password":"wrong"}'
+curl -X POST http://localhost:3333/api/auth/login \
+-H "Content-Type: application/json" \
+-d '{"username":"admin","password":"wrong"}'
 done
 # Expected: 6th attempt returns 429 Too Many Requests
 ```
@@ -269,8 +269,8 @@ done
 ```bash
 # Test user creation with password
 curl -X POST http://localhost:3333/api/users/create \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"testpass"}'
+-H "Content-Type: application/json" \
+-d '{"username":"testuser","password":"testpass"}'
 # Expected: User created with working password
 
 # Test service logs with correct line count
@@ -280,7 +280,7 @@ curl http://localhost:3333/api/logs?unit=sshd.service&lines=100
 
 ---
 
-## 📝 Upgrade Notes
+## Upgrade Notes
 
 All fixes are backward compatible. No configuration changes required.
 
@@ -292,7 +292,7 @@ Recommended actions after upgrade:
 
 ---
 
-## 🙏 Credits
+## Credits
 
 Security audit and fixes performed on November 11, 2025.
 
@@ -300,8 +300,7 @@ All vulnerabilities were discovered during internal code review before any publi
 
 ---
 
-**Version:** 1.1.1  
-**Date:** November 11, 2025  
-**Severity:** HIGH (Multiple critical command injection vulnerabilities)  
-**Status:** ✅ ALL FIXED
-
+**Version:** 1.1.1
+**Date:** November 11, 2025
+**Severity:** HIGH (Multiple critical command injection vulnerabilities)
+**Status:** ALL FIXED

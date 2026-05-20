@@ -3,7 +3,16 @@ node_modules
 .cache
 dist
 build
+build-deb
+build-rpm
+apt-repo
+dists
+pool
 *.log
+*.deb
+*.rpm
+*.tar.gz
+*.zip
 .env*
 !.env.example
 .git
@@ -14,6 +23,4 @@ orbit
 orbit-setup
 orbit-linux-*
 orbit-setup-linux-*
-*.tar.gz
-*.zip
 

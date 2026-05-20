@@ -67,16 +67,15 @@ done >> dists/${DIST}/Release
 cd ..
 
 echo ""
-echo "✅ APT repository built successfully!"
-echo "   Repository: ${REPO_DIR}/"
+echo " APT repository built successfully!"
+echo " Repository: ${REPO_DIR}/"
 echo ""
 echo "Directory structure:"
 tree ${REPO_DIR} 2>/dev/null || find ${REPO_DIR} -type f
 
 echo ""
 echo "To use this repository:"
-echo "  1. Host ${REPO_DIR}/ on a web server"
-echo "  2. Add to sources.list:"
-echo "     deb [trusted=yes] https://your-domain.com/apt-repo stable main"
-echo "  3. apt update && apt install orbitctl"
-
+echo " 1. Host ${REPO_DIR}/ on a web server"
+echo " 2. Add to sources.list:"
+echo " deb [trusted=yes] https://your-domain.com/apt-repo stable main"
+echo " 3. apt update && apt install orbitctl"

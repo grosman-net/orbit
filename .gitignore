@@ -7,59 +7,55 @@ orbit-setup
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test and coverage output
 *.test
-
-# Output of the go coverage tool
 *.out
 
 # Go workspace file
 go.work
 
-# Config files (contain sensitive data)
+# Configuration and secrets
 config.json
 /etc/orbit/config.json
+.env
+.env.local
+.env.production
+.env.*.local
 
-# Build artifacts
-orbit-linux-*
-orbit-setup-linux-*
+# Build output and generated package artifacts
 dist/
 build/
+build-deb/
+build-rpm/
+apt-repo/
+dists/
+pool/
+*.deb
+*.rpm
+*.tar.gz
+*.zip
 
-# IDE
+# Editor and IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
 
-# Node.js (for old version)
+# Node / frontend
 node_modules/
 .next/
 .cache/
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
-
-# Environment files
-.env
-.env.local
-.env.production
-.env.*.local
-
-
-# Debian package build artifacts
-build-deb/
-
-# APT repository (generated, tracked separately on gh-pages)
-apt-repo/
 
 # Temporary documentation files
 GITHUB_AUTOMATION.sh
