@@ -15,7 +15,7 @@ echo ""
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
-    echo "❌ This script must be run as root"
+    echo "Error: This script must be run as root"
     echo "   Please run: sudo $0"
     exit 1
 fi
@@ -104,8 +104,8 @@ elif [ "$PKG_MANAGER" = "dnf" ] || [ "$PKG_MANAGER" = "yum" ]; then
     LATEST_VERSION=$(curl -sL ${GITHUB_RELEASES} | grep -oP 'tag/v\K[0-9]+\.[0-9]+\.[0-9]+' | head -1)
     
     if [ -z "$LATEST_VERSION" ]; then
-        echo "⚠️  Could not fetch latest version, using fallback: 1.2.0"
-        LATEST_VERSION="1.2.0"
+        echo "Warning: Could not fetch latest version, using fallback: 1.2.1"
+        LATEST_VERSION="1.2.1"
     else
         echo "✓ Latest version: $LATEST_VERSION"
     fi

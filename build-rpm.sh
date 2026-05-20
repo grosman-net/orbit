@@ -3,7 +3,7 @@
 
 set -e
 
-VERSION="${1:-1.2.0}"
+VERSION="${1:-1.2.1}"
 ARCH="${2:-x86_64}"
 BUILD_DIR="build-rpm"
 SPEC_FILE="rpm/orbit.spec"
@@ -89,4 +89,6 @@ echo "   sudo dnf localinstall dist/${RPM_NAME}"
 echo ""
 echo "Package info:"
 rpm -qip dist/${RPM_NAME}
+
+
 

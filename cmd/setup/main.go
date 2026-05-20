@@ -15,19 +15,20 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Orbit Setup ===\n")
+	fmt.Println("=== Orbit Setup ===")
+	fmt.Println()
 
 	cfg := config.Config{}
 
 	// Port
 	cfg.Port = promptInt("HTTP port", 3333)
 
-	// Admin username with automatic password
-	cfg.AdminUsername = promptStringOrDefault("Admin username (password will be same as username)", "admin")
-	password := cfg.AdminUsername // Username = Password by default
+	cfg.AdminUsername = promptStringOrDefault("Admin username", "admin")
+	password := util.GenerateRandomString(16)
 
-	fmt.Printf("✓ Username: %s (default password: %s)\n", cfg.AdminUsername, cfg.AdminUsername)
-	fmt.Println("  You can change the password after first login via web panel")
+	fmt.Printf("Admin username: %s\n", cfg.AdminUsername)
+	fmt.Printf("Temporary password: %s\n", password)
+	fmt.Println("Save this password. You will be asked to set a new one on first login.")
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -36,8 +37,9 @@ func main() {
 	}
 	cfg.AdminPasswordHash = string(hash)
 
-	// Session secret
 	cfg.SessionSecret = util.GenerateRandomString(64)
+	cfg.TrustedProxies = []string{"127.0.0.1", "::1"}
+	cfg.BindAddress = "0.0.0.0"
 
 	// Detect IP automatically
 	detectedIP := util.DetectPrimaryIP()
@@ -67,11 +69,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n✅ Configuration saved!\n\n")
+	fmt.Println("\nConfiguration saved.\n")
 	fmt.Printf("═══════════════════════════════════════════\n")
 	fmt.Printf("  Panel URL: %s\n", cfg.PublicURL)
 	fmt.Printf("  Username:  %s\n", cfg.AdminUsername)
-	fmt.Printf("  Password:  %s (change after first login)\n", cfg.AdminUsername)
+	fmt.Printf("  Password:  (see temporary password printed above)\n")
 	fmt.Printf("═══════════════════════════════════════════\n")
 }
 

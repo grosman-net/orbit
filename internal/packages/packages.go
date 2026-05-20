@@ -39,6 +39,9 @@ func List() ([]Package, error) {
 }
 
 func Search(query string) ([]Package, error) {
+	if !isValidSearchQuery(query) {
+		return nil, fmt.Errorf("invalid search query: %s", query)
+	}
 	output, err := util.RunCommandNoSudo("apt-cache", "search", query)
 	if err != nil {
 		return nil, err
@@ -83,6 +86,18 @@ func Remove(pkg string, purge bool) error {
 	return err
 }
 
+func isValidSearchQuery(query string) bool {
+	if query == "" || len(query) > 100 {
+		return false
+	}
+	for _, c := range query {
+		if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.' || c == ' ') {
+			return false
+		}
+	}
+	return true
+}
+
 // isValidPackageName checks if package name contains only allowed characters
 func isValidPackageName(pkg string) bool {
 	if pkg == "" {
@@ -108,6 +123,9 @@ func Upgrade() error {
 }
 
 func GetPackageInfo(pkg string) (string, error) {
+	if !isValidPackageName(pkg) {
+		return "", fmt.Errorf("invalid package name: %s", pkg)
+	}
 	output, err := util.RunCommandNoSudo("apt-cache", "show", pkg)
 	if err != nil {
 		return "", fmt.Errorf("package not found")

@@ -35,9 +35,8 @@ func (h *Handler) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate new password
-	if len(req.NewPassword) < 4 {
-		h.writeError(w, "New password must be at least 4 characters", http.StatusBadRequest)
+	if err := auth.ValidatePassword(req.NewPassword, user.Username); err != nil {
+		h.writeError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

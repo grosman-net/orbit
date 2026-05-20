@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"net/http"
 	"sync"
 	"time"
 )
@@ -60,25 +59,6 @@ func ResetRateLimit(ip string) {
 	attemptsMutex.Lock()
 	defer attemptsMutex.Unlock()
 	delete(loginAttempts, ip)
-}
-
-// GetClientIP extracts the real client IP from the request
-func GetClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header (common with reverse proxies)
-	xff := r.Header.Get("X-Forwarded-For")
-	if xff != "" {
-		// Take the first IP in the list
-		return xff
-	}
-	
-	// Check X-Real-IP header
-	xri := r.Header.Get("X-Real-IP")
-	if xri != "" {
-		return xri
-	}
-	
-	// Fall back to RemoteAddr
-	return r.RemoteAddr
 }
 
 // CleanupOldAttempts periodically cleans up old login attempts

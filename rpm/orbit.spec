@@ -1,5 +1,5 @@
 Name:           orbit
-Version:        1.2.0
+Version:        1.2.1
 Release:        1%{?dist}
 Summary:        Modern server management panel for RHEL/CentOS/Rocky Linux
 License:        Apache-2.0
@@ -84,9 +84,12 @@ fi
 %license %{_docdir}/%{name}/LICENSE
 
 %changelog
-* Wed Dec 03 2025 grosman-net <https://github.com/grosman-net> - 1.2.0-1
+* Tue May 20 2026 grosman-net <https://github.com/grosman-net> - 1.2.1-1
+- Security hardening: CSRF, headers, audit log, password policy
 - Initial RPM package for RHEL/CentOS/Rocky Linux
 - Added RPM support alongside existing DEB support
 - Switched license from MIT to Apache 2.0
 - Full feature parity with DEB package
+
+
 

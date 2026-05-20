@@ -1,5 +1,6 @@
 // Global state
 let currentUser = null;
+let csrfToken = null;
 let refreshInterval = null;
 let cpuMemChart = null;
 let networkChart = null;
@@ -7,14 +8,30 @@ let metricsHistory = [];
 let currentConfig = null;
 let refreshRate = 5000;
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // API helpers
 async function api(endpoint, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+    };
+    if (method !== 'GET' && method !== 'HEAD' && csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+    }
+
     const response = await fetch(`/api${endpoint}`, {
         ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
+        headers,
     });
 
     if (response.status === 401) {
@@ -37,6 +54,7 @@ async function checkSession() {
         const data = await api('/auth/session');
         if (data.authenticated) {
             currentUser = data.user;
+            csrfToken = data.csrf_token || csrfToken;
             showApp();
             return true;
         }
@@ -91,7 +109,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         });
 
         if (response.ok) {
-            // Reload page to clear state and start fresh
+            const data = await response.json();
+            if (data.csrf_token) {
+                csrfToken = data.csrf_token;
+            }
             window.location.reload();
         } else {
             errorDiv.textContent = 'Invalid username or password';
@@ -343,13 +364,13 @@ function displaySystemSummary(data) {
     container.innerHTML = `
         <div class="card">
             <h3>Hostname</h3>
-            <div class="card-value">${data.hostname}</div>
-            <div class="card-detail">${data.os}</div>
+            <div class="card-value">${escapeHtml(data.hostname)}</div>
+            <div class="card-detail">${escapeHtml(data.os)}</div>
         </div>
         <div class="card">
             <h3>Uptime</h3>
             <div class="card-value">${formatUptime(data.uptime)}</div>
-            <div class="card-detail">Kernel: ${data.kernel}</div>
+            <div class="card-detail">Kernel: ${escapeHtml(data.kernel)}</div>
         </div>
         <div class="card">
             <h3>CPU Usage</h3>
@@ -419,9 +440,9 @@ function displayPackages(packages) {
             <tbody>
                 ${packages.slice(0, 100).map(pkg => `
                     <tr>
-                        <td><strong>${pkg.name}</strong></td>
-                        <td>${pkg.version}</td>
-                        <td>${pkg.description || '-'}</td>
+                        <td><strong>${escapeHtml(pkg.name)}</strong></td>
+                        <td>${escapeHtml(pkg.version)}</td>
+                        <td>${escapeHtml(pkg.description || '-')}</td>
                         <td>
                             <div class="package-actions">
                                 <button class="btn-danger" onclick="removePackage('${pkg.name}')">Remove</button>
@@ -541,9 +562,9 @@ function displayServices(services) {
             <tbody>
                 ${services.map(svc => `
                     <tr>
-                        <td><strong>${svc.unit}</strong></td>
-                        <td><span class="status status-${getStatusClass(svc.active)}">${svc.active}</span></td>
-                        <td>${svc.description}</td>
+                        <td><strong>${escapeHtml(svc.unit)}</strong></td>
+                        <td><span class="status status-${getStatusClass(svc.active)}">${escapeHtml(svc.active)}</span></td>
+                        <td>${escapeHtml(svc.description)}</td>
                         <td>
                             <div class="service-actions">
                                 <button class="btn-success" onclick="serviceAction('${svc.unit}', 'start')">Start</button>
@@ -607,8 +628,8 @@ function displayNetwork(data) {
         <div class="interface-card">
             <div class="interface-header">
                 <div class="interface-name">
-                    ${iface.name}
-                    <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${iface.state}</span>
+                    ${escapeHtml(iface.name)}
+                    <span class="status status-${iface.state === 'UP' ? 'active' : 'inactive'}">${escapeHtml(iface.state)}</span>
                 </div>
                 <div class="interface-controls">
                     <button class="btn-success" onclick="interfaceUp('${iface.name}')">Up</button>
@@ -619,10 +640,10 @@ function displayNetwork(data) {
             </div>
             <div class="interface-info">
                 <span class="interface-info-label">MAC:</span>
-                <span class="interface-info-value">${iface.mac || 'N/A'}</span>
+                <span class="interface-info-value">${escapeHtml(iface.mac || 'N/A')}</span>
                 <span class="interface-info-label">Addresses:</span>
-                <span class="interface-info-value">${iface.addresses.join(', ') || 'None'}</span>
-                ${iface.mtu ? `<span class="interface-info-label">MTU:</span><span class="interface-info-value">${iface.mtu}</span>` : ''}
+                <span class="interface-info-value">${escapeHtml(iface.addresses.join(', ') || 'None')}</span>
+                ${iface.mtu ? `<span class="interface-info-label">MTU:</span><span class="interface-info-value">${escapeHtml(String(iface.mtu))}</span>` : ''}
             </div>
             <div class="interface-config-form">
                 <div class="form-row">
@@ -661,7 +682,7 @@ function displayNetwork(data) {
         </div>
         ${data.firewallRules.map((rule, idx) => `
             <div class="firewall-rule-item">
-                <code>${rule}</code>
+                <code>${escapeHtml(rule)}</code>
                 <button class="btn-danger" onclick="deleteFirewallRule('${idx + 1}')">Delete</button>
             </div>
         `).join('')}
@@ -701,17 +722,17 @@ function displayNetwork(data) {
                     <div>
                         <div class="route-label">Destination</div>
                                 <div class="route-value">
-                                    ${route.destination}
+                                    ${escapeHtml(route.destination)}
                                     ${isDefault ? '<span class="route-badge">Default</span>' : ''}
                                 </div>
                     </div>
                     <div>
                         <div class="route-label">Gateway</div>
-                        <div class="route-value">${route.gateway || '-'}</div>
+                        <div class="route-value">${escapeHtml(route.gateway || '-')}</div>
                     </div>
                     <div>
                         <div class="route-label">Interface</div>
-                        <div class="route-value">${route.interface || '-'}</div>
+                        <div class="route-value">${escapeHtml(route.interface || '-')}</div>
                     </div>
                             ${route.metric ? `
                             <div>
@@ -928,10 +949,10 @@ function displayUsers(users) {
             <tbody>
                 ${users.map(user => `
                     <tr>
-                        <td><strong>${user.username}</strong></td>
-                        <td>${user.uid}</td>
-                        <td>${user.home}</td>
-                        <td>${user.shell}</td>
+                        <td><strong>${escapeHtml(user.username)}</strong></td>
+                        <td>${escapeHtml(String(user.uid))}</td>
+                        <td>${escapeHtml(user.home)}</td>
+                        <td>${escapeHtml(user.shell)}</td>
                         <td><span class="status ${user.locked ? 'status-inactive' : 'status-active'}">${user.locked ? 'Locked' : 'Active'}</span></td>
                         <td>
                             <div class="service-actions">
@@ -991,8 +1012,8 @@ function displayConfigs(configs) {
     const container = document.getElementById('configList');
     container.innerHTML = configs.map(cfg => `
         <div class="config-item" onclick="loadConfigContent('${cfg.id}', this)">
-            <h3>${cfg.name}</h3>
-            <p>${cfg.description}</p>
+            <h3>${escapeHtml(cfg.name)}</h3>
+            <p>${escapeHtml(cfg.description)}</p>
         </div>
     `).join('');
 }
@@ -1032,7 +1053,11 @@ window.loadConfigContent = async function(id, element) {
 
 function displayRawEditor() {
     const editor = document.getElementById('configEditor');
-    editor.innerHTML = `<textarea id="configTextarea">${currentConfig.content}</textarea>`;
+    editor.innerHTML = '';
+    const textarea = document.createElement('textarea');
+    textarea.id = 'configTextarea';
+    textarea.value = currentConfig.content;
+    editor.appendChild(textarea);
 }
 
 async function displayInteractiveEditor() {
@@ -1047,12 +1072,12 @@ async function displayInteractiveEditor() {
                     return `
                         <div class="config-field-group" data-key="${field.key}">
                             <div class="config-field-header">
-                                <div class="config-field-label">${field.label}</div>
+                                <div class="config-field-label">${escapeHtml(field.label)}</div>
                                 <span class="config-field-status ${value.enabled ? 'enabled' : 'disabled'}">
                                     ${value.enabled ? 'Enabled' : 'Disabled'}
                                 </span>
                             </div>
-                            <div class="config-field-desc">${field.description}</div>
+                            <div class="config-field-desc">${escapeHtml(field.description)}</div>
                             <div class="config-field-control">
                                 <div class="config-toggle ${value.enabled ? 'active' : ''}" 
                                      onclick="toggleConfigField('${field.key}')">

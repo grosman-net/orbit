@@ -9,11 +9,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"orbit/internal/config"
+	"orbit/internal/util"
 )
 
 var (
-	cfg   *config.Config
-	store *sessions.CookieStore
+	cfg             *config.Config
+	store           *sessions.CookieStore
+	trustedProxies  []string
 )
 
 type User struct {
@@ -27,13 +29,14 @@ func init() {
 func Init(c *config.Config) {
 	cfg = c
 
-	// Ensure session secret is at least 32 bytes for security
+	trustedProxies = cfg.TrustedProxies
+	if len(trustedProxies) == 0 {
+		trustedProxies = []string{"127.0.0.1", "::1"}
+	}
+
 	secret := []byte(cfg.SessionSecret)
 	if len(secret) < 32 {
-		// Pad with zeros if too short (shouldn't happen with proper setup)
-		padded := make([]byte, 32)
-		copy(padded, secret)
-		secret = padded
+		panic("session_secret must be at least 32 characters; run orbit-setup to regenerate")
 	}
 
 	store = sessions.NewCookieStore(secret)
@@ -103,12 +106,37 @@ func GetUser(r *http.Request) *User {
 }
 
 func SetUser(r *http.Request, w http.ResponseWriter, username string) error {
-	session, err := GetSession(r)
+	// Rotate session on login to limit fixation risk.
+	old, _ := GetSession(r)
+	old.Values["user"] = nil
+	old.Options.MaxAge = -1
+	_ = old.Save(r, w)
+
+	session, err := store.New(r, "orbit-session")
 	if err != nil {
 		return err
 	}
 	session.Values["user"] = &User{Username: username}
+	session.Values["csrf_token"] = util.GenerateRandomString(32)
 	return session.Save(r, w)
+}
+
+// GetCSRFToken returns the CSRF token for the current session.
+func GetCSRFToken(r *http.Request) string {
+	session, err := GetSession(r)
+	if err != nil {
+		return ""
+	}
+	if token, ok := session.Values["csrf_token"].(string); ok {
+		return token
+	}
+	return ""
+}
+
+// ValidateCSRFToken checks the request CSRF token against the session.
+func ValidateCSRFToken(r *http.Request, token string) bool {
+	expected := GetCSRFToken(r)
+	return expected != "" && expected == token
 }
 
 func Logout(r *http.Request, w http.ResponseWriter) error {

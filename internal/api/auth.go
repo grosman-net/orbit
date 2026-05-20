@@ -40,8 +40,9 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.writeJSON(w, map[string]interface{}{
-		"success": true,
-		"user":    map[string]string{"username": req.Username},
+		"success":    true,
+		"user":       map[string]string{"username": req.Username},
+		"csrf_token": auth.GetCSRFToken(r),
 	})
 }
 
@@ -62,6 +63,7 @@ func (h *Handler) handleSession(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, map[string]interface{}{
 		"authenticated": true,
 		"user":          map[string]string{"username": user.Username},
+		"csrf_token":    auth.GetCSRFToken(r),
 	})
 }
 

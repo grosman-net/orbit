@@ -87,6 +87,10 @@ func Write(id, content string) error {
 		return fmt.Errorf("config is not editable")
 	}
 
+	if err := ValidateContent(id, content); err != nil {
+		return err
+	}
+
 	// Write to temp file first in a writable location to avoid issues with read-only /etc
 	tmpDir := "/tmp"
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
@@ -94,7 +98,7 @@ func Write(id, content string) error {
 	}
 
 	tmpFile := filepath.Join(tmpDir, fmt.Sprintf("orbit-config-%s.tmp", cfg.ID))
-	if err := os.WriteFile(tmpFile, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte(content), 0600); err != nil {
 		// Most common case: read-only filesystem in the target environment
 		return fmt.Errorf("failed to write temporary config file: %w", err)
 	}

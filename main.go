@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,7 +14,10 @@ import (
 	"orbit/internal/api"
 	"orbit/internal/auth"
 	"orbit/internal/config"
+	"orbit/internal/middleware"
 )
+
+const Version = "1.2.1"
 
 //go:embed web/*
 var webFS embed.FS
@@ -38,20 +42,35 @@ func main() {
 	// Initialize auth
 	auth.Init(cfg)
 
-	// Setup HTTP server
-	handler := api.NewHandler(webFS, cfg)
-	addr := fmt.Sprintf(":%d", cfg.Port)
+	handler := middleware.SecurityHeaders(
+		middleware.CSRF(
+			middleware.AuditLog(
+				api.NewHandler(webFS, cfg),
+			),
+		),
+	)
 
-	log.Printf("Starting Orbit Server Management Panel")
-	log.Printf("Listening on http://0.0.0.0:%d", cfg.Port)
+	addr := net.JoinHostPort(cfg.BindAddress, fmt.Sprintf("%d", cfg.Port))
+
+	log.Printf("Starting Orbit %s", Version)
+	if cfg.TLSCert != "" && cfg.TLSKey != "" {
+		log.Printf("Listening on https://%s", addr)
+	} else {
+		log.Printf("Listening on http://%s (use a reverse proxy with TLS for production)", addr)
+	}
 	log.Printf("Press Ctrl+C to stop")
 
-	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		if err := http.ListenAndServe(addr, handler); err != nil {
+		var err error
+		if cfg.TLSCert != "" && cfg.TLSKey != "" {
+			err = http.ListenAndServeTLS(addr, cfg.TLSCert, cfg.TLSKey, handler)
+		} else {
+			err = http.ListenAndServe(addr, handler)
+		}
+		if err != nil {
 			log.Fatalf("Server failed: %v", err)
 		}
 	}()
