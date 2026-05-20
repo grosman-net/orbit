@@ -4,31 +4,32 @@ set -e
 
 VERSION="${1:-1.2.1}"
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-WORKTREE="${ROOT}/.gh-pages-worktree"
+TMP="${ROOT}/.gh-pages-publish"
 
 cd "$ROOT"
 ./build-release.sh "$VERSION"
 ./build-apt-repo.sh "$VERSION"
 
-rm -rf "$WORKTREE"
-git fetch origin gh-pages
-git worktree add -B gh-pages "$WORKTREE" origin/gh-pages
+rm -rf "$TMP"
+/usr/bin/git clone --depth 1 --branch gh-pages git@github.com:grosman-net/orbit.git "$TMP"
+cd "$TMP"
 
-# Keep landing page, replace repo metadata
-find "$WORKTREE" -mindepth 1 -maxdepth 1 ! -name 'index.html' -exec rm -rf {} +
-cp -a apt-repo/dists apt-repo/pool "$WORKTREE/"
-cp install-orbitctl.sh "$WORKTREE/"
+for item in *; do
+  [ "$item" = "index.html" ] && continue
+  rm -rf "$item"
+done
 
-cd "$WORKTREE"
-git add -A
-if git diff --staged --quiet; then
+cp -a "${ROOT}/apt-repo/dists" "${ROOT}/apt-repo/pool" .
+cp "${ROOT}/install-orbitctl.sh" .
+
+/usr/bin/git add -A
+if /usr/bin/git diff --staged --quiet; then
   echo "gh-pages: no changes to publish"
 else
-  git commit -m "Publish APT repository v${VERSION}"
-  git push origin gh-pages
+  /usr/bin/git commit -m "Publish APT repository v${VERSION}"
+  /usr/bin/git push origin gh-pages
   echo "Published gh-pages for v${VERSION}"
 fi
 
 cd "$ROOT"
-git worktree remove "$WORKTREE" --force 2>/dev/null || rm -rf "$WORKTREE"
-git worktree prune
+rm -rf "$TMP"
